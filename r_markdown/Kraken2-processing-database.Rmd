@@ -1,0 +1,268 @@
+---
+title: "Kraken2 and MetaPhlAn3 confidence and database testing - building the databases"
+output:
+  html_document:
+    toc: yes
+    toc_float: yes
+    code_folding: hide
+  pdf_document:
+    toc: yes
+---
+
+```{R, results='hide', fig.keep='all', message=FALSE}
+library(reticulate)
+library(knitr)
+```
+
+# Download and build databases {.tabset}
+
+## MetaPhlAn3
+
+Install and get databases:
+```{bash, eval=FALSE}
+conda create --name mpa -c bioconda python=3.7 metaphlan
+conda activate mpa
+metaphlan --install --bowtie2db metaphlan/
+```
+
+## Kraken2 {.tabset}
+
+### Standard
+
+Downloaded from the Langmead lab - Kraken2 links to the Loman lab, which links to the Langmead lab:
+```{bash, eval=FALSE}
+wget https://genome-idx.s3.amazonaws.com/kraken/k2_standard_20210517.tar.gz
+```
+
+### Download all genomes needed
+
+To do this with the least amount of steps/downloads possible, I follow the instructions for making the GTDB + NCBI database first, on the [Microbiome Helper github](https://github.com/LangilleLab/microbiome_helper/wiki).<br>
+
+This is as follows:<br>
+1. `python get_ncbi_other_domains.py --processors 12` - this gets the fungi, invertebrate, plant, protozoa, vertebrate_mammalian, vertebrate_other and viral genomes and adds them to the folder `ncbi_genomes/` and also makes a file with taxonomy information on them (run May 2021, V205)<br>
+2. `python download_GTDB_latest.py` - get the bacterial and archaeal genomes from GTDB (run May 2021, r202)<br>
+3. Add NCBI genomes to the folder containing GTDB genomes and saves the files needed by Kraken2 containing the taxonomy structure for all genomes (GTDB and any NCBI)<br>
+4. `python rename_fasta_headers.py --processors 12` - renames the fasta headers of all fasta files to have taxonomy ID information in them, as required by Kraken2<br>
+
+I then downloaded the bacteria and archaea from NCBI separately, using the same script as above, but with different options: <br>
+5. `python get_ncbi_other_domains.py --domain bacteria,archaea --folder bac_arc_only --processors 12` <br>
+
+### Make GTDB + NCBI database
+
+For this, I first used steps 1-4 above, so I had the bacterial and archaeal genomes from GTDB and genomes from the other domains from NCBI. The genomes were all in one folder, and we also had the taxonomy information (nodes.dmp, names.dmp and nucl.taxid2accession).<br>
+I then ran the following steps:<br>
+1. `mkdir kraken2_GTDBr202_RefSeqV205`<br>
+2. `mv nodes.dmp kraken2_GTDBr202_RefSeqV205/`, `mv names.dmp kraken2_GTDBr202_RefSeqV205/`, `mv nucl.taxid2accession kraken2_GTDBr202_RefSeqV205/`<br>
+3. `python unzip_add_library.py`:<br>
+```{python, eval=FALSE}
+import os
+from multiprocessing import Pool
+from multiprocessing import freeze_support
+import pandas as pd
+
+folder = 'fasta_renamed_GTDB_RefSeq/'
+database = 'kraken2_GTDBr202_RefSeqV205/'
+
+genomes = os.listdir(folder)
+
+already_added = pd.read_csv(database+'genomes_added.txt', header=None, index_col=0, sep='\n')
+already_added = set(list(already_added.index.values))
+
+with open(database+'genomes_added_RefSeq.txt', 'w') as f:
+    for gen in genomes:
+        f.write(gen+'\n')
+
+new_genomes = []
+for gen in genomes:
+    if gen not in already_added:
+        new_genomes.append(gen)
+
+genomes = new_genomes
+
+def unzip_add(gen):
+    os.system('gunzip '+folder+gen)
+    os.system('kraken2-build --add-to-library '+folder+gen.replace('.gz', '')+' --db '+database)
+    os.system('gzip '+folder+gen.replace('.gz', ''))
+    print(gen)
+    return
+
+def run_multiprocessing(func, i, n_processors):
+    with Pool(processes=n_processors) as pool:
+        return pool.map(func, i)
+
+def main():
+
+    n_processors =12
+    print('Starting processing')
+    run_multiprocessing(unzip_add, genomes, n_processors)
+
+
+if __name__ == "__main__":
+    freeze_support()   # required to use multiprocessing
+    main()
+```
+4. `kraken2-build --build --db kraken2_GTDBr202_RefSeqV205 --threads 12`<br>
+5. `bracken-build -d kraken2_GTDBr202_RefSeqV205 -t 12 -l 150`<br>
+
+### Make RefSeq databases
+
+For this, the genomes in folders `ncbi_genomes/` and `bac_arc_only/` were combined to be `fasta_RefSeqV205_Complete/` and then we ran the following steps:<br>
+1. `mkdir RefSeqV205_Complete`<br>
+2. `kraken2-build --download-taxonomy --db RefSeqV205_Complete --use-ftp`<br>
+3a. `mkdir fasta_renamed_RefSeqV205_Complete`<br>
+3b. Combine the information from the assembly summaries to get the genome list file:<br>
+```{python, eval=FALSE}
+import os
+import pandas as pd
+assembly_lists = ['archaea_assembly_summary.txt', 'bacteria_assembly_summary.txt', 'fungi_assembly_summary.txt', 'invertebrate_assembly_summary.txt', 'plant_assembly_summary.txt', 'protozoa_assembly_summary.txt', 'vertebrate_mammalian_assembly_summary.txt', 'vertebrate_other_assembly_summary.txt', 'viral_assembly_summary.txt']
+genome_taxid = []
+for assembly in assembly_lists:
+  assembly = pd.read_csv('assembly_lists/'+assembly, header=1, index_col=0)
+  for row in assembly.index.values:
+    genome_taxid.append([row, assembly.loc[row, 'taxid']])
+
+genome_taxid = pd.DataFrame(genome_taxid, columns=['Genome accession', 'taxid']).set_index('Genome accession')
+genome_taxid.to_csv('db_samples.tsv', sep='\t')
+```
+3b. `python rename_fasta_headers.py --genome_folder fasta_RefSeqV205_Complete --genome_list db_samples.tsv --log_file logfile.txt --processors 12`<br>
+4. `python unzip_add_library.py --genome_folder fasta_renamed_RefSeqV205_Complete --database RefSeqV205_Complete --processors 12`<br>
+5. `kraken2-build --download-library nt --db RefSeqV205_Complete`<br>
+   `kraken2-build --download-library UniVec_Core --db RefSeqV205_Complete`<br>
+6. `cp RefSeqV205_Complete/ RefSeqV205_Complete_500GB/`<br>
+   `cp RefSeqV205_Complete/ RefSeqV205_Complete_100GB/`<br>
+7. `kraken2-build --build --db RefSeqV205_Complete --threads 24`<br>
+   `kraken2-build --build --db RefSeqV205_Complete_500GB --threads 24 --max-db-size 500000000000`<br>
+   `kraken2-build --build --db RefSeqV205_Complete_500GB --threads 24 --max-db-size 100000000000`<br>
+8. The bracken build was a bit more complicated for this one because we ran out of memory when trying to run it all at once, so these were built as follows (same for each one):<br>
+```{bash, eval=FALSE}
+#full
+KRAKEN_DB=/home/robyn/databases_May2021/RefSeqV205_Complete/
+READ_LEN=150
+KMER_LEN=35
+THREADS=24
+kraken2 --db=${KRAKEN_DB} --threads=$THREADS <( find -L ${KRAKEN_DB}/library \(-name "*.fna" -o -name "*.fa" -o -name "*.fasta" \) -exec cat {} + )  > ${KRAKEN_DB}/database.kraken
+
+split -l 15000000 ${KRAKEN_DB}/database.kraken ${KRAKEN_DB}/split.database.kraken
+
+for i in ${KRAKEN_DB}/split.database.kraken* ;
+do
+  ./kmer2read_distr --seqid2taxid ${KRAKEN_DB}/seqid2taxid.map --taxonomy ${KRAKEN_DB}/taxonomy --kraken ${i} --output ${KRAKEN_DB}/database${READ_LEN}mers.kraken."${i##*.}" -k ${KMER_LEN} -l ${READ_LEN} -t ${THREADS}
+done
+
+cat ${KRAKEN_DB}/database150mers.kraken.* > ${KRAKEN_DB}/database150mers.kraken
+
+python generate_kmer_distribution.py -i ${KRAKEN_DB}/database150mers.kraken -o ${KRAKEN_DB}/database150mers.kmer_distrib
+```
+
+### Database with only nt
+
+Note that this was carried out at a different time than the other databases and therefore uses V208 of the database (as it wasn't possible to download previous versions)
+```{bash, eval=FALSE}
+kraken2-build --download-taxonomy --db kraken2_RefSeqV208_nt --use-ftp
+kraken2-build --download-library nt --db kraken2_RefSeqV208_nt/ --threads 12 --use-ftp
+kraken2-build --build --db kraken2_RefSeqV208_nt/ --threads 12
+bracken-build -d kraken2_RefSeqV208_nt/ -t 12 -l 150
+```
+
+### MetaPhlAn3 equivalent for Kraken2
+
+1. Get information about the taxa included in MetaPhlAn3/Chocophlan (from the supplementary information of the Biobakery 3 paper):<br>
+```{bash, eval=FALSE}
+wget https://cdn.elifesciences.org/articles/65088/elife-65088-supp8-v1.xlsx
+```
+This was then manually converted to a .csv file called `taxid_metaphlan.csv`<br>
+I also moved the assembly summaries that had been downloaded with the first script (`get_ncbi_other_domains.py`) in to a folder called `assembly_lists`<br>
+
+2. Run script to add the genomes that match the taxonomy ID's from this file to our library:
+```{python, eval=FALSE}
+import os
+from multiprocessing import Pool
+import pickle
+from multiprocessing import freeze_support
+import pandas as pd
+
+domains = ['archaea', 'bacteria', 'fungi', 'invertebrate', 'plant', 'protozoa', 'vertebrate_mammalian', 'vertebrate_other', 'viral']
+accession = []
+
+for dom in domains:
+    dom = pd.read_csv('assembly_lists/'+dom+'_assembly_summary.txt', index_col=0, header=1, sep='\t')
+    dom = dom.loc[:, ['taxid', 'ftp_path']]
+    accession.append(dom)
+    
+accession = pd.concat(accession)
+
+acc_dict = {}
+for acc in accession.index.values:
+    acc_dict[accession.loc[acc, 'ftp_path'].split('/')[-1]] = accession.loc[acc, 'taxid']
+
+with open('ncbi_taxid.dict', 'wb') as f:
+    pickle.dump(acc_dict, f)
+
+with open('ncbi_taxid.dict', 'rb') as f:
+    acc_dict = pickle.load(f)
+
+choco = pd.read_csv('taxid_metaphlan.csv', index_col=0, header=0)
+ids_adding = set(list(choco.index.values))
+
+ids_adding = [str(id) for id in ids_adding]
+
+folder = 'fasta_renamed_refseq_complete/'
+database = 'kraken_chocophlan/'
+genomes = os.listdir(folder)
+genomes_adding = []
+no_taxid = []
+
+print(len(genomes))
+
+for gen in genomes:
+    gen_name = gen.replace('_genomic.tax.fna.gz', '')
+    if gen_name in acc_dict:
+        taxid = acc_dict[gen_name]
+        if str(taxid) in ids_adding:
+            genomes_adding.append(gen)
+    else:
+        if not '_' in gen:
+            no_taxid.append(gen)
+            continue
+        gen_name2 = gen.split('_')
+        gen_name2 = gen_name2[0]+'_'+gen_name2[1]
+        if gen_name2 in acc_dict:
+            taxid = acc_dict[gen_name2]
+            if taxid in ids_adding:
+                genomes_adding.append(gen)
+        else:
+            no_taxid.append(gen)
+
+print(len(genomes_adding))
+
+genomes = genomes_adding
+
+with open(database+'genomes_added.txt', 'w') as f:
+    for gen in genomes:
+        f.write(gen+'\n') 
+
+def unzip_add(gen):
+    os.system('gunzip '+folder+gen)
+    os.system('kraken2-build --add-to-library '+folder+gen.replace('.gz', '')+' --db '+database)
+    os.system('gzip '+folder+gen.replace('.gz', ''))
+    print(gen)
+    return
+
+def run_multiprocessing(func, i, n_processors):
+    with Pool(processes=n_processors) as pool:
+        return pool.map(func, i)
+
+def main():
+
+    n_processors =12
+    print('Starting processing')
+    run_multiprocessing(unzip_add, genomes, n_processors)
+
+
+if __name__ == "__main__":
+    freeze_support()   # required to use multiprocessing
+    main()
+
+```
+3. `kraken2-build --build --db kraken_chocophlan --threads 12`<br>
+4. `bracken-build -d kraken_chocophlan -t 12 -l 150`<br>
