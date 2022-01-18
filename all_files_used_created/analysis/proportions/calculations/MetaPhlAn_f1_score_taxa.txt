@@ -1,0 +1,12 @@
+Sample name	F1 score taxa
+HMP_even_illum_SRR172902-MetaPhlAn-default	0.7200000000000001
+JGI_SRR033548-MetaPhlAn-default	0.6153846153846153
+HMP_even_454_SRR072233-MetaPhlAn-default	0.85
+BioPool-MetaPhlAn-default	0.7368421052631577
+JGI_SRR033549-MetaPhlAn-default	0.8
+ZymoMock-MetaPhlAn-default	0.761904761904762
+ABRF_MGRG_Normal-MetaPhlAn-default	0.6666666666666666
+ABRF_MGRG_10ng-MetaPhlAn-default	0.6666666666666666
+ABRF_MGRG_Half-MetaPhlAn-default	0.6
+ABRF_MGRG_5ng-MetaPhlAn-default	0.6666666666666665
+ABRF_MGRG_1ng-MetaPhlAn-default	0.6666666666666665

@@ -1,0 +1,12 @@
+Sample name	Unweighted unifrac distance relative abundance
+ABRF_MGRG_Half-MetaPhlAn-default	0.3384615384615385
+ABRF_MGRG_5ng-MetaPhlAn-default	0.3384615384615385
+ABRF_MGRG_Normal-MetaPhlAn-default	0.15384615384615385
+JGI_SRR033549-MetaPhlAn-default	0.24778761061946902
+HMP_even_illum_SRR172902-MetaPhlAn-default	0.2577777777777778
+ABRF_MGRG_10ng-MetaPhlAn-default	0.3384615384615385
+JGI_SRR033548-MetaPhlAn-default	0.4424778761061947
+BioPool-MetaPhlAn-default	0.37606837606837606
+HMP_even_454_SRR072233-MetaPhlAn-default	0.45739910313901344
+ZymoMock-MetaPhlAn-default	0.37606837606837606
+ABRF_MGRG_1ng-MetaPhlAn-default	0.3384615384615385

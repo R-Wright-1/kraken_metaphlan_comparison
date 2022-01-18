@@ -1,0 +1,12 @@
+Sample name	Faith's phylogenetic diversity
+ABRF_MGRG_Half-MetaPhlAn-default	21.5
+ABRF_MGRG_5ng-MetaPhlAn-default	21.5
+ABRF_MGRG_Normal-MetaPhlAn-default	27.5
+JGI_SRR033549-MetaPhlAn-default	34.5
+ABRF_MGRG_10ng-MetaPhlAn-default	21.5
+HMP_even_illum_SRR172902-MetaPhlAn-default	84.5
+HMP_even_454_SRR072233-MetaPhlAn-default	60.5
+BioPool-MetaPhlAn-default	37.5
+JGI_SRR033548-MetaPhlAn-default	31.5
+ZymoMock-MetaPhlAn-default	37.5
+ABRF_MGRG_1ng-MetaPhlAn-default	21.5
