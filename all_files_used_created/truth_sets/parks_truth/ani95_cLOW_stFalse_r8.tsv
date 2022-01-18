@@ -1,0 +1,26 @@
+Accession	GTDB species	NCBI species	Genome size (bp)	Community (%)	Reads (%)	No. simulated reads	Genome file
+G900460955	s__Cardiobacterium valvarum	s__Cardiobacterium valvarum	2755518	0.016647863568008143	0.009184277691926639	643	GCA_900460955.1_genomic.fna.gz
+G002582255	s__Bacillus_A wiedmannii	s__Bacillus wiedmannii	5381180	4.739061160155885	5.105673970416546	357397	GCA_002582255.1_genomic.fna.gz
+G002253965	s__Lactobacillus_H reuteri	s__Lactobacillus reuteri	2180980	0.24004019718016906	0.1048139055448101	7337	GCA_002253965.1_genomic.fna.gz
+G005311005	s__Lactobacillus_B animalis	s__Lactobacillus animalis	2280577	0.0036653640348704164	0.001673574693635008	117	GCA_005311005.1_genomic.fna.gz
+G001670765	s__Riemerella anatipestifer	s__Riemerella anatipestifer	2509140	4.444046029051721	2.232475432408994	156273	GCA_001670765.2_genomic.fna.gz
+G003858565	s__Streptococcus sanguinis	s__Streptococcus sanguinis	2476917	0.00692672241374709	0.0034349663237339587	240	GCA_003858565.1_genomic.fna.gz
+G002866885	s__Aeromonas veronii	s__Aeromonas veronii	4863185	1.6600674152093784	1.6163289880863074	113143	GCA_002866885.2_genomic.fna.gz
+G004209405	s__Acinetobacter venetianus	s__Acinetobacter venetianus	3402911	0.022374770321694635	0.015243771232999043	1067	GCA_004209405.1_genomic.fna.gz
+G001620325	s__Shewanella baltica	s__Shewanella baltica	5167578	78.10818770285772	80.8103239671351	5656723	GCA_001620325.1_genomic.fna.gz
+G004363555	s__Halomonas ventosae_A	s__Halomonas ventosae	4021263	1.4305364170833315	1.1517139891104098	80620	GCA_004363555.1_genomic.fna.gz
+G003359215	s__Acinetobacter pittii	s__Acinetobacter pittii	3898236	0.20414336126079372	0.1593259934216483	11153	GCA_003359215.2_genomic.fna.gz
+G900450875	s__Haemophilus_A parahaemolyticus	s__Haemophilus parahaemolyticus	2163754	0.16687134384754876	0.07228911253469779	5060	GCA_900450875.1_genomic.fna.gz
+G003850035	s__Staphylococcus pettenkoferi	s__Staphylococcus pettenkoferi	2519169	0.2895663396169074	0.14604564989165147	10223	GCA_003850035.1_genomic.fna.gz
+G006716905	s__Acidovorax_D temperans	s__Acidovorax temperans	4651394	0.35772411313421926	0.33313064826438205	23319	GCA_006716905.1_genomic.fna.gz
+G900459065	s__Streptococcus dysgalactiae	s__Streptococcus dysgalactiae	2150943	0.21229230257535703	0.09142109004572636	6399	GCA_900459065.1_genomic.fna.gz
+G003860545	s__Chryseobacterium_D taklimakanense	s__Chryseobacterium taklimakanense	2538787	0.17321969538794305	0.08804542260031113	6163	GCA_003860545.1_genomic.fna.gz
+G900447095	s__Clostridium_P perfringens	s__Clostridium perfringens	3007013	0.007122175954694034	0.0042877677200309165	300	GCA_900447095.1_genomic.fna.gz
+G004327895	s__Azotobacter chroococcum	s__Azotobacter chroococcum	4644599	0.4107956215752304	0.3819946463826563	26740	GCA_004327895.1_genomic.fna.gz
+G000956895	s__Klebsiella_B aerogenes	s__Klebsiella aerogenes	5349781	1.4363413974648895	1.538427121425461	107690	GCA_000956895.1_genomic.fna.gz
+G000452545	s__Pseudomonas_E avellanae	s__Pseudomonas syringae	5970940	4.30187827515475	5.142615691324114	359983	GCA_000452545.2_genomic.fna.gz
+G001648265	s__Eikenella corrodens	s__Eikenella corrodens	2408287	0.4897620050373882	0.23614381627993786	16530	GCA_001648265.1_genomic.fna.gz
+G003464225	s__Holdemanella biformis	s__Holdemanella biformis	2477128	0.028749242810927885	0.01425798341391845	998	GCA_003464225.1_genomic.fna.gz
+G003495225	s__Neisseria polysaccharea	s__Neisseria polysaccharea	2057444	0.8733559722545938	0.35975145880909265	25183	GCA_003495225.1_genomic.fna.gz
+G000965835	s__Enterobacter nimipressuralis	s__Enterobacter roggenkampii	4956613	0.07182070850988	0.07127183535661202	4989	GCA_000965835.1_genomic.fna.gz
+G005144425	s__Agrobacterium larrymoorei	s__Agrobacterium larrymoorei	5081981	0.30480380353835895	0.310124919885275	21709	GCA_005144425.1_genomic.fna.gz

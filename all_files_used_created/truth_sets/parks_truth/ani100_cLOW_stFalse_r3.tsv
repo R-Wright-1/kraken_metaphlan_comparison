@@ -1,0 +1,123 @@
+Accession	GTDB species	NCBI species	Genome size (bp)	Community (%)	Reads (%)	No. simulated reads	Genome file
+G000383295	s__Clostridium_E sporosphaeroides	s__[Clostridium] sporosphaeroides	3174421	0.019999710913171872	0.013076692169857065	915	GCA_000383295.1_genomic.fna.gz
+G900112235	s__Marinospirillum celere	s__Marinospirillum celere	3083561	0.9180222152257531	0.5830628803799728	40814	GCA_900112235.1_genomic.fna.gz
+G900111445	s__Oceanobacillus_A limi	s__Oceanobacillus limi	3913837	0.2516146457374485	0.2028375283194479	14199	GCA_900111445.1_genomic.fna.gz
+G000258575	s__Stenotrophomonas geniculata	s__[Pseudomonas] geniculata	4678478	0.01456779393513569	0.014038090567276614	983	GCA_000258575.2_genomic.fna.gz
+G001187725	s__Brevibacillus reuszeri	s__Brevibacillus reuszeri	6986486	0.4888349483905547	0.7034458944735524	49241	GCA_001187725.1_genomic.fna.gz
+G001444445	s__Prevotella enoeca	s__Prevotella enoeca	2861432	1.2428963469314263	0.7325343592652822	51277	GCA_001444445.1_genomic.fna.gz
+G000378125	s__Rudaea cellulosilytica	s__Rudaea cellulosilytica	4343639	0.860604866232141	0.7699582557883446	53897	GCA_000378125.1_genomic.fna.gz
+G900142015	s__Bacteroides stercorirosoris	s__Bacteroides stercorirosoris	6268181	0.15747021433103003	0.20330572389357068	14231	GCA_900142015.1_genomic.fna.gz
+G002214185	s__Streptomyces capitiformicae	s__Streptomyces capitiformicae	10989391	0.004864496947905049	0.0110108594670916	771	GCA_002214185.1_genomic.fna.gz
+G002086215	s__Mycobacterium heidelbergense	s__Mycobacterium heidelbergense	4999105	0.008619353871196143	0.008875168938956565	621	GCA_002086215.1_genomic.fna.gz
+G002285905	s__Rickettsia sp002285905	s__Rickettsia endosymbiont of Bemisia tabaci	1378618	0.09195565485937371	0.026111513459321507	1828	GCA_002285905.1_genomic.fna.gz
+G001687605	s__Planococcus_B plakortidis	s__Planococcus plakortidis	3261818	0.08143708930399438	0.054713138342100835	3830	GCA_001687605.2_genomic.fna.gz
+G000430685	s__Tuberibacillus calidus	s__Tuberibacillus calidus	3242009	0.8604447332269841	0.5745751716593381	40220	GCA_000430685.1_genomic.fna.gz
+G000341395	s__Desulfocapsa sulfexigens	s__Desulfocapsa sulfexigens	4023512	0.010259067951466888	0.008502034561004368	595	GCA_000341395.1_genomic.fna.gz
+G000214215	s__Marinomonas posidonica	s__Marinomonas posidonica	3899940	0.5751381801336694	0.46199766770904666	32340	GCA_000214215.1_genomic.fna.gz
+G900103955	s__Alkalicoccus daliensis	s__Bacillus daliensis	3778165	0.08260176101771025	0.06428059462490016	4500	GCA_900103955.1_genomic.fna.gz
+G000172415	s__Paraburkholderia graminis	s__Paraburkholderia graminis	7477263	0.02275433362814944	0.0350442231171514	2453	GCA_000172415.1_genomic.fna.gz
+G001462435	s__Burkholderia humptydooensis	s__Burkholderia humptydooensis	6785123	1.16371529593576	1.6263504207675723	113845	GCA_001462435.1_genomic.fna.gz
+G002188635	s__Pigmentiphaga sp002188635	s__Pigmentiphaga sp. NML030171	5862145	0.003296889642936822	0.0039808024451151915	279	GCA_002188635.1_genomic.fna.gz
+G000253015	s__Bartonella clarridgeiae	s__Bartonella clarridgeiae	1522743	2.618167415172337	0.8211711517585235	57482	GCA_000253015.1_genomic.fna.gz
+G001580865	s__Gluconobacter japonicus	s__Gluconobacter japonicus	3162929	0.1870538291799559	0.12186127142466045	8530	GCA_001580865.1_genomic.fna.gz
+G003298775	s__Rhodosalinus sp003298775	s__Rhodosalinus sp. E84	3872454	0.029786094833818087	0.02375797900393599	1663	GCA_003298775.1_genomic.fna.gz
+G000336635	s__Haloarcula japonica	s__Haloarcula japonica	4280359	0.004482215624035212	0.003951687555455126	277	GCA_000336635.1_genomic.fna.gz
+G001685485	s__Formosa haliotis	s__Formosa haliotis	4305801	0.024693055763778764	0.021899714351885587	1533	GCA_001685485.1_genomic.fna.gz
+G001641635	s__Bradyrhizobium sp001641635	s__Bradyrhizobium centrolobii	10111113	0.04511920974901746	0.09396586310156885	6578	GCA_001641635.1_genomic.fna.gz
+G000469385	s__Leptotrichia sp000469385	s__Leptotrichia sp. oral taxon 879	2415750	1.2907322541332542	0.6422406786410032	44957	GCA_000469385.1_genomic.fna.gz
+G001595645	s__Sulfurovum riftiae	s__Sulfurovum riftiae	2374692	0.29091733764599575	0.1422939883407418	9961	GCA_001595645.1_genomic.fna.gz
+G000331105	s__Fibrella aestuarina	s__Fibrella aestuarina	6937263	22.43289901654038	32.05407284067331	2243785	GCA_000331105.1_genomic.fna.gz
+G002135435	s__Acinetobacter sp002135435	s__Acinetobacter sp. ANC 3813	3857920	7.663349578339451	6.089498299487053	426265	GCA_002135435.1_genomic.fna.gz
+G002209565	s__Candidimonas nitroreducens	s__Candidimonas nitroreducens	5606995	5.406643802504464	6.244067454846178	437085	GCA_002209565.1_genomic.fna.gz
+G001673415	s__Mycobacterium europaeum_A	s__Mycobacterium sp. 1165196.3	5581711	0.30343742563649445	0.34885596275622405	24420	GCA_001673415.1_genomic.fna.gz
+G003234185	s__Curtobacterium sp003234185	s__Curtobacterium sp. MCSS17_008	3252144	0.003987087897146709	0.0026707622924541773	187	GCA_003234185.1_genomic.fna.gz
+G002095535	s__Pantoea cypripedii	s__Pantoea cypripedii	6553825	0.7986999032134399	1.0781722039420851	75472	GCA_002095535.1_genomic.fna.gz
+G001278845	s__Actinomyces sp001278845	s__Actinomyces sp. oral taxon 414	3836419	0.02947760912704444	0.0232931352137597	1631	GCA_001278845.1_genomic.fna.gz
+G900230225	s__Spirosoma fluviale	s__Spirosoma fluviale	7807294	0.01824347818184283	0.029337144115998026	2054	GCA_900230225.1_genomic.fna.gz
+G002866065	s__Thiopseudomonas denitrificans	s__Thiopseudomonas denitrificans	2841088	0.19670651240477577	0.11511000769484371	8058	GCA_002866065.1_genomic.fna.gz
+G000183565	s__Peptoniphilus_A harei_A	s__Peptoniphilus harei	1836030	0.32485733825754926	0.12285196671327439	8600	GCA_000183565.2_genomic.fna.gz
+G900089855	s__Vibrio atlanticus	s__Vibrio atlanticus	4990786	0.03920167427956655	0.04029797496580597	2821	GCA_900089855.1_genomic.fna.gz
+G000716545	s__Kitasatospora phosalacinea	s__Kitasatospora phosalacinea	7620895	0.1934890479839816	0.30371904420748974	21260	GCA_000716545.1_genomic.fna.gz
+G002920895	s__Flavobacterium alvei	s__Flavobacterium alvei	3823090	0.011877077049835275	0.009352630021411039	655	GCA_002920895.1_genomic.fna.gz
+G002025645	s__Curtobacterium pusillum	s__Curtobacterium pusillum	4541048	11.151568152372633	10.43041754323645	730129	GCA_002025645.1_genomic.fna.gz
+G000814665	s__Pseudoalteromonas elyakovii	s__Pseudoalteromonas elyakovii	5454522	0.029183072523585776	0.03278667463488914	2295	GCA_000814665.1_genomic.fna.gz
+G001273925	s__Bacillus_AZ sp001273925	s__Bacillus sp. FJAT-27251	5043950	0.016490564763157276	0.017132311455060258	1199	GCA_001273925.1_genomic.fna.gz
+G000374525	s__Amorphus coralli	s__Amorphus coralli	4317545	0.06334688845906015	0.0563341594979135	3943	GCA_000374525.1_genomic.fna.gz
+G001435195	s__Lactobacillus_O satsumensis	s__Lactobacillus satsumensis	2639652	0.10573963187098723	0.05749024083845524	4024	GCA_001435195.1_genomic.fna.gz
+G000739775	s__Paraburkholderia_B heleia	s__Paraburkholderia heleia	8007470	0.17931907602083735	0.2957545749786239	20703	GCA_000739775.1_genomic.fna.gz
+G002734235	s__Sphingobacterium sp002734235	s__Sphingobacterium sp. 1.A.5	4547892	1.8345866055906033	1.7185335693040105	120297	GCA_002734235.1_genomic.fna.gz
+G001922955	s__Teredinibacter sp001922955	s__Alteromonadales bacterium BS08	4836222	1.454703743481342	1.4490735972269269	101435	GCA_001922955.1_genomic.fna.gz
+G001403635	s__Clostridium_P sp001403635	s__Clostridium sp. ND2	3732966	0.16081672354404164	0.12365022265176966	8656	GCA_001403635.1_genomic.fna.gz
+G001889405	s__Methanohalophilus halophilus	s__Methanohalophilus halophilus	2022959	3.923409485289119	1.6347839953658885	114435	GCA_001889405.1_genomic.fna.gz
+G002835515	s__Vibrio sp002835515	s__Vibrio sp. vnigr-6D03	6308473	0.2932119890766603	0.3809918025458995	26669	GCA_002835515.1_genomic.fna.gz
+G900110225	s__Brachymonas denitrificans	s__Brachymonas denitrificans	2712870	0.14752820827281427	0.08243539241787448	5770	GCA_900110225.1_genomic.fna.gz
+G900111295	s__Salipaludibacillus aurantiacus	s__Salipaludibacillus aurantiacus	4435185	0.014052657984565413	0.012837482807742672	899	GCA_900111295.1_genomic.fna.gz
+G900167565	s__Pseudoxanthomonas_A indica	s__Pseudoxanthomonas indica	3960916	0.40013707551302713	0.32644805450028047	22851	GCA_900167565.1_genomic.fna.gz
+G900215625	s__Terribacillus aidingensis	s__Terribacillus aidingensis	3389510	0.4930958222768867	0.34425313289868653	24098	GCA_900215625.1_genomic.fna.gz
+G000786215	s__Blastomonas sp000786215	s__Sphingomonas sp. 35-24ZXX	4090983	0.015864859909488275	0.013368219721363706	936	GCA_000786215.1_genomic.fna.gz
+G000526255	s__LP2A sp000526255	s__Verrucomicrobia bacterium LP2A	2465519	1.498939389333894	0.7612057927631074	53284	GCA_000526255.1_genomic.fna.gz
+G001639065	s__Vibrio barjaei	s__Vibrio barjaei	5535129	0.05741801165415524	0.06546144002141777	4582	GCA_001639065.2_genomic.fna.gz
+G001405655	s__Alistipes onderdonkii	s__Alistipes finegoldii	3372095	3.7466159514150257	2.602247726525883	182157	GCA_001405655.1_genomic.fna.gz
+G000373545	s__Alkalispirochaeta alkalica	s__Alkalispirochaeta alkalica	3358314	0.003322996532199784	0.0022985864736617127	161	GCA_000373545.1_genomic.fna.gz
+G000878135	s__Frigoribacterium sp000878135	s__Frigoribacterium sp. MEB024	3406371	0.02255017428715774	0.015821640357212136	1108	GCA_000878135.1_genomic.fna.gz
+G900185015	s__Octadecabacter ascidiaceicola	s__Octadecabacter ascidiaceicola	3233060	0.00518271206520075	0.003451282462984808	242	GCA_900185015.1_genomic.fna.gz
+G002243605	s__Geobacillus lituanicus	s__Geobacillus lituanicus	3499511	0.019351294356727573	0.013948485034931294	976	GCA_002243605.1_genomic.fna.gz
+G003097015	s__Devosia sp003097015	s__Devosia sp. PTEAB7WZ	3992749	0.026627146815887952	0.021898093268737765	1533	GCA_003097015.1_genomic.fna.gz
+G001687335	s__Dissulfuribacter thermophilus	s__Dissulfuribacter thermophilus	2524199	2.225181112614129	1.156907440132621	80984	GCA_001687335.1_genomic.fna.gz
+G001594225	s__Pseudomonas_E fluorescens_AR	s__Pseudomonas sp. MS586	6396728	0.14540717893176508	0.19158142161417568	13411	GCA_001594225.2_genomic.fna.gz
+G002927635	s__Albidovulum inexpectatum	s__Albidovulum inexpectatum	2997984	0.7447459945699515	0.45988277743661754	32192	GCA_002927635.1_genomic.fna.gz
+G000615445	s__Lactobacillus hamsteri	s__Lactobacillus hamsteri	1826493	1.0776339160815118	0.40541416828789373	28379	GCA_000615445.1_genomic.fna.gz
+G001189015	s__Streptomyces acidiscabies	s__Streptomyces acidiscabies	9978361	2.987669998899861	6.140468343120355	429833	GCA_001189015.1_genomic.fna.gz
+G002954645	s__Polaribacter gangjinensis	s__Polaribacter gangjinensis	2943061	0.48745823501641145	0.29549241270992743	20684	GCA_002954645.1_genomic.fna.gz
+G001870125	s__Nitrosocosmicus exaquare	s__Candidatus Nitrosocosmicus exaquare	2989777	0.8863569840635175	0.5458296539170753	38208	GCA_001870125.1_genomic.fna.gz
+G002150685	s__Algoriphagus antarcticus	s__Algoriphagus antarcticus	5883179	0.06039174204020033	0.073181158163302	5123	GCA_002150685.1_genomic.fna.gz
+G001878855	s__Poseidonibacter lekithochrous	s__Arcobacter lekithochrous	3607848	2.769074193157848	2.0577493972670613	144042	GCA_001878855.1_genomic.fna.gz
+G002284945	s__Uliginosibacterium carminicum	s__Candidatus Dactylopiibacterium carminicum	3589384	0.14773042999230948	0.10921933884068885	7645	GCA_002284945.1_genomic.fna.gz
+G000772965	s__Lysinibacillus_A massiliensis	s__Lysinibacillus massiliensis	3999909	0.004075706790142177	0.00335786090951037	235	GCA_000772965.1_genomic.fna.gz
+G000590555	s__Corynebacterium argentoratense	s__Corynebacterium argentoratense	2031902	0.0060053608332254205	0.002513341623813797	176	GCA_000590555.1_genomic.fna.gz
+G000967915	s__Acholeplasma_C brassicae	s__Acholeplasma brassicae	1877792	0.1253227853203202	0.04847158060284738	3393	GCA_000967915.1_genomic.fna.gz
+G900110395	s__Reyranella sp900110395	s__Rhodospirillales bacterium URHD0017	8179139	0.1694552756613235	0.285477800402736	19983	GCA_900110395.1_genomic.fna.gz
+G001623565	s__Streptococcus marmotae	s__Streptococcus marmotae	2322791	0.034699533522047674	0.01660135092015689	1162	GCA_001623565.1_genomic.fna.gz
+G001499905	s__Mycolicibacterium sp001499905	s__Mycobacterium sp. GA-1285	4811582	0.12502413923090008	0.12390573933671524	8673	GCA_001499905.1_genomic.fna.gz
+G001939735	s__Photobacterium proteolyticum	s__Photobacterium proteolyticum	6484429	0.4865250442464034	0.6498103119131806	45487	GCA_001939735.1_genomic.fna.gz
+G001434665	s__Lactobacillus_K tucceti	s__Lactobacillus tucceti	2173857	0.007173061534726529	0.003211775547067676	225	GCA_001434665.1_genomic.fna.gz
+G000963515	s__Streptomyces albulus_B	s__Streptomyces albulus	9784577	0.09592607438231446	0.19332516345717918	13533	GCA_000963515.1_genomic.fna.gz
+G003097615	s__UBA6769 sp003097615	s__Pueribacillus theae	3753578	0.02610132671314329	0.020179838513583976	1413	GCA_003097615.1_genomic.fna.gz
+G000378845	s__Micromonospora pacifica_B	s__Salinispora pacifica	5464752	0.074379490057635	0.08372078907427064	5860	GCA_000378845.1_genomic.fna.gz
+G900099855	s__Bradyrhizobium sp900099855	s__Bradyrhizobium sp. Rc2d	9578216	0.0282032431315693	0.05564079629781196	3895	GCA_900099855.1_genomic.fna.gz
+G900167885	s__Lysinibacillus sp002237755	s__Lysinibacillus sp. AC-3	5159173	0.41994036727071793	0.4462491208708483	31237	GCA_900167885.1_genomic.fna.gz
+G000472485	s__Pontibacter actiniarum	s__Pontibacter actiniarum	4952578	0.005803688514089858	0.0059203185965352205	414	GCA_000472485.1_genomic.fna.gz
+G900111755	s__Thalassotalea agarivorans	s__Thalassotalea agarivorans	3306525	0.6893140245595285	0.46945998871325173	32862	GCA_900111755.1_genomic.fna.gz
+G000308755	s__Nocardia pneumoniae	s__Nocardia pneumoniae	7588197	0.027180792589259446	0.04248252997656159	2974	GCA_000308755.1_genomic.fna.gz
+G000763315	s__Thermoactinomyces_A daqus	s__Thermoactinomyces daqus	3441572	0.45317148774301513	0.32123961439308607	22487	GCA_000763315.1_genomic.fna.gz
+G001652585	s__Thermosulfurimonas dismutans	s__Thermosulfurimonas dismutans	2119932	0.03432941635406644	0.014989874925120227	1049	GCA_001652585.1_genomic.fna.gz
+G000455165	s__Mycolicibacterium iranicum	s__Mycolicibacterium iranicum	6137283	0.4644755712820439	0.5871494873761793	41100	GCA_000455165.1_genomic.fna.gz
+G002087085	s__Marispirochaeta aestuarii	s__Marispirochaeta aestuarii	4216685	0.07684073911303012	0.06673787149020383	4672	GCA_002087085.1_genomic.fna.gz
+G001647255	s__Cellulosimicrobium cellulans_E	s__Cellulosimicrobium sp. I38E	4709106	0.014911180682206555	0.014463058996597639	1012	GCA_001647255.1_genomic.fna.gz
+G000296775	s__Sulfurovum sp000296775	s__Sulfurovum sp. AR	2125769	0.02760204162303725	0.012085564336298284	846	GCA_000296775.1_genomic.fna.gz
+G900095815	s__Methanothermobacter wolfeii	s__Methanothermobacter wolfeii	1686891	0.043145179481569644	0.01499094324176588	1049	GCA_900095815.1_genomic.fna.gz
+G000980885	s__Streptomyces malaysiense	s__Streptomyces malaysiense	7963326	1.3660007903283715	2.240552395765032	156839	GCA_000980885.2_genomic.fna.gz
+G900155395	s__Merdibacter massiliensis	s__Merdibacter massiliensis	2468696	0.17395661032689314	0.0884541490038074	6192	GCA_900155395.1_genomic.fna.gz
+G001298955	s__Achromobacter sp001298955	s__Achromobacter sp. ATCC31444	6720738	0.32913234450392803	0.4556141331068374	31893	GCA_001298955.1_genomic.fna.gz
+G900094885	s__Bifidobacterium commune	s__Bifidobacterium commune	1633662	0.02210444167724855	0.007437918506808768	521	GCA_900094885.1_genomic.fna.gz
+G900185595	s__Calothrix_A rhizosoleniae	s__Calothrix rhizosoleniae	5973003	0.05269586303241255	0.06483043165067631	4538	GCA_900185595.1_genomic.fna.gz
+G001647085	s__Thermococcus piezophilus	s__Thermococcus piezophilus	1928800	0.13293644784132883	0.0528130107112497	3697	GCA_001647085.1_genomic.fna.gz
+G000189255	s__Vibrio brasiliensis	s__Vibrio brasiliensis	4715026	0.1251193413178073	0.12151172886396211	8506	GCA_000189255.2_genomic.fna.gz
+G001274945	s__Viridibacillus arvi	s__Viridibacillus arvi	4758570	0.2823102000343771	0.2767022500964733	19369	GCA_001274945.1_genomic.fna.gz
+G001311765	s__Lactobacillus equicursoris	s__Lactobacillus equicursoris	2025929	0.015621536628288232	0.006518649517517083	456	GCA_001311765.1_genomic.fna.gz
+G003313245	s__Pseudooceanicola_A sp003313245	s__Primorskyibacter marinus	4069681	2.0151050807671402	1.6891480856772605	118240	GCA_003313245.1_genomic.fna.gz
+G900239185	s__Tenacibaculum finnmarkense	s__Tenacibaculum finnmarkense	2923287	0.4129287261774318	0.24863153454048895	17404	GCA_900239185.1_genomic.fna.gz
+G900129575	s__Flavobacterium segetis	s__Flavobacterium segetis	3463995	0.3469046206378592	0.2475124218844842	17326	GCA_900129575.1_genomic.fna.gz
+G001639285	s__Methanobrevibacter_C cuticularis	s__Methanobrevibacter cuticularis	2608702	0.0037973686198442234	0.00204040738661962	143	GCA_001639285.1_genomic.fna.gz
+G000732925	s__Amycolatopsis japonica	s__Amycolatopsis japonica	9053857	0.015283435983009009	0.028501275208680503	1995	GCA_000732925.1_genomic.fna.gz
+G900095835	s__F0040 sp900095835	s__Prevotellaceae bacterium Marseille-P2826	2771606	0.025724965396695762	0.01468574391312691	1028	GCA_900095835.1_genomic.fna.gz
+G002201795	s__Alkalitalea saponilacus	s__Alkalitalea saponilacus	4775573	0.1409697276153603	0.13866313264189098	9706	GCA_002201795.1_genomic.fna.gz
+G002209485	s__Bordetella_C sp002209485	s__Achromobacter sp. HZ34	7049357	0.9936982954587426	1.4428251656309405	100998	GCA_002209485.1_genomic.fna.gz
+G000934745	s__Desulfonatronum thioautotrophicum	s__Desulfonatronum thioautotrophicum	4634603	0.03495064549449427	0.03336394512081107	2335	GCA_000934745.1_genomic.fna.gz
+G001428435	s__Arthrobacter_D sp001428435	s__Arthrobacter sp. Soil782	3422365	0.11136441341063988	0.07850230673288384	5495	GCA_001428435.1_genomic.fna.gz
+G000613125	s__Bacillus_D sp000613125	s__Bacillus sp. EB01	5282259	0.22944434522462284	0.24963570920033465	17474	GCA_000613125.1_genomic.fna.gz
+G001602525	s__Flavobacterium chilense	s__Flavobacterium chilense	5924510	0.005853555163909186	0.007143019094729379	500	GCA_001602525.1_genomic.fna.gz
+G002102025	s__Mycobacterium bohemicum	s__Mycobacterium bohemicum	5420516	1.7199824766568144	1.9203231244628856	134423	GCA_002102025.1_genomic.fna.gz
+G000685665	s__Helicobacter pylori	s__Helicobacter pylori	1604233	1.7950848294039132	0.5931466489345762	41520	GCA_000685665.1_genomic.fna.gz
+G000152805	s__Maritimibacter alkaliphilus	s__Maritimibacter alkaliphilus	4536113	0.11785375970285675	0.11011258677168793	7708	GCA_000152805.1_genomic.fna.gz
+G000420805	s__Yaniella halotolerans	s__Yaniella halotolerans	2775456	0.123940067449142	0.07085259052483604	4960	GCA_000420805.1_genomic.fna.gz

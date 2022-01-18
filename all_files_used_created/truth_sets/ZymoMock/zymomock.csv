@@ -1,0 +1,11 @@
+﻿taxonomy_id,taxon,ZymoMock,Expected genome length,Minimum genome length,Maximum genome length,Theoretical composition,Theoretical genome copy number,Theoretical cell number,Expected number of reads (lot proportion x number of reads)
+287,Pseudomonas aeruginosa,0.147,6634585,5248000,8021000,12,6.1,6.1,1895254
+562,Escherichia coli,0.126,5227526,4182000,6274000,12,8.5,8.5,1624503
+28901,Salmonella enterica,0.121,4775444,3820000,5731000,12,8.7,8.8,1560039
+1613,Lactobacillus fermentum,0.095,2005122,1501000,2509000,12,21.6,21.9,1224824
+1351,Enterococcus faecalis,0.126,2996189,1505000,4487000,12,14.6,14.6,1624503
+1280,Staphylococcus aureus,0.102,2840057,2272000,3409000,12,15.2,15.3,1315074
+1639,Listeria monocytogenes,0.126,3021006,2416000,3626000,12,13.9,13.9,1624503
+1423,Bacillus subtilis,0.123,4131742,3305000,4959000,12,10.3,10.3,1585824
+4932,Saccharomyces cerevisiae,0.019,11627053,7603000,15651000,2,0.57,0.29,244965
+5207,Cryptococcus neoformans,0.015,18519860,14815000,22224000,2,0.37,0.18,193393
