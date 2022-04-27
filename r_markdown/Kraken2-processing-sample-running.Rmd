@@ -66,20 +66,6 @@ mv ani* inflated_parks/
 for i in parks_mocks/*.tar.gz ; do mv $i parks_mocks/tar/ ; done
 ```
 
-**Not currently used until the files are made available**
-CAMI2 (https://data.cami-challenge.org/participate):
-```{bash, eval=FALSE}
-#have to do this locally by downloading link files and then sequence files and then upload because I don't want to spend time making java work
-brew install --cask adoptopenjdk8 # - maybe an issue with java version? This doesn't work installing this way, and I didn't find another way to install java v8, which the CAMI client says it wants
-java -jar camiClient.jar -d linkfile_3 rhizosphere/ 
-java -jar camiClient.jar -d linkfile_4 rhizosphere/ 
-java -jar camiClient.jar -d linkfile_5 pathogen_detection/ #done and copied to server
-java -jar camiClient.jar -d linkfile_6 marine/ #in process
-java -jar camiClient.jar -d linkfile_7 marine/
-java -jar camiClient.jar -d linkfile_8 strain_madness/
-java -jar camiClient.jar -d linkfile_9 strain_madness/
-```
-
 **All samples were put into a folder called ```samples_running/```**
 
 ## Files for real world validation
@@ -651,11 +637,11 @@ combined_df.to_csv('kraken_combined_RefSeq.csv')
 #### Default
 
 ```{python, eval=FALSE}
-files = os.listdir(direc_db+'metaphlan_profiles/')
+files = os.listdir('metaphlan_out/')
 all_samples = []
 for file in files:
   if file == '.DS_Store': continue
-  profile = pd.read_csv(direc_db+'metaphlan_profiles/'+file, index_col=0, header=3, sep='\t')
+  profile = pd.read_csv('metaphlan_out/'+file, index_col=0, header=3, sep='\t')
   rows = []
   for row in profile.index.values:
     if 's__' in row:
@@ -667,7 +653,7 @@ for file in files:
   all_samples.append(this_sample.set_index('Taxid'))
 all_samples = pd.concat(all_samples).fillna(value=0)
 all_samples = all_samples.groupby(by=all_samples.index, axis=0).sum()
-all_samples.to_csv(direc_db+'MetaPhlAn_combined.csv')
+all_samples.to_csv('MetaPhlAn_combined.csv')
 ```
 
 #### Estimated reads
@@ -3226,468 +3212,6 @@ proportion_bacteria = pd.concat(proportion_bacteria).fillna(value=0)
 proportion_bacteria.to_csv(direc+'picrust_validation/analysis/metagenome_proportion_of_reads_classified_bacteria.csv')
 ```
 
-
-# All older
-
-## Get all parent taxonomy ID's
-
-```{python, eval=FALSE}
-import os
-import pickle
-import pandas as pd
-
-folder = 'kraken2_kreport/'
-kraken_files = [f for f in os.listdir(folder) if 'bracken' not in f and '0.00' in f]
-kraken_dict_genus, kraken_dict_species = {}, {}
-for fi in kraken_files:
-  D = ''
-  for row in open(folder+fi, 'r'):
-    row = row.split('\t')
-    if row[3] in ['D', 'G', 'S']:
-      if row[3] == 'D': D = row[5].replace('\n', '').strip()
-      elif row[3] == 'G': kraken_dict_genus[row[4]] = D
-      elif row[3] == 'S': kraken_dict_species[row[4]] = D
-
-meta_folder = 'metaphlan_out/'
-meta_files = os.listdir(meta_folder)
-metaphlan_dict_genus, metaphlan_dict_species = {}, {}
-replacing = {'2':'Bacteria', '2759':'Eukaryota', '10239':'Viruses', '2157':'Archaea'}
-for fi in meta_files:
-  this_file = pd.read_csv(meta_folder+fi, index_col=0, header=4, sep='\t')
-  all_taxid = this_file.loc[:, 'clade_taxid'].values
-  for taxid in all_taxid:
-    if not isinstance(taxid, str): continue
-    taxid = taxid.split('|')
-    if len(taxid) == 7:
-      metaphlan_dict_species[taxid[-1]] = replacing[taxid[0]]
-    elif len(taxid) == 6:
-      metaphlan_dict_genus[taxid[-1]] = replacing[taxid[0]]
-
-combined_dict_genus = {}
-for taxid in kraken_dict_genus:
-  combined_dict_genus[taxid] = kraken_dict_genus[taxid]
-
-for taxid in metaphlan_dict_genus:
-  combined_dict_genus[taxid] = metaphlan_dict_genus[taxid]
-
-combined_dict_species = {}
-for taxid in kraken_dict_species:
-  combined_dict_species[taxid] = kraken_dict_species[taxid]
-  
-for taxid in metaphlan_dict_species:
-  combined_dict_species[taxid] = metaphlan_dict_species[taxid]
-
-with open('combined_dict_genus.dict', 'wb') as f:
-    pickle.dump(combined_dict_genus, f)
-
-with open('combined_dict_species.dict', 'wb') as f:
-    pickle.dump(combined_dict_species, f)
-```
-
-## Combine 16S feature tables and taxonomic classifications
-
-And remove taxa that aren't bacteria.
-
-```{python, eval=FALSE}
-folder_16S = direc+'picrust_validation/16S_datasets/'
-files = [f for f in os.listdir(folder_16S) if '.tsv' in f and 'species_table' not in f and 'genus_table' not in f]
-taxonomy = pd.read_csv(folder_16S+'taxa/taxonomy.tsv', index_col=0, header=0, sep='\t')
-feature_table = []
-
-for f in files:
-  fn = f.split('_')[0]
-  this_file = pd.read_csv(folder_16S+f, index_col=0, header=1, sep='\t')
-  sample_rename = {}
-  for col in this_file.columns:
-    sample_rename[col] = fn+'_'+col
-  this_file = this_file.rename(columns=sample_rename)
-  if isinstance(feature_table, list):
-    feature_table = pd.DataFrame(this_file)
-  else:
-    feature_table = pd.concat([feature_table, this_file]).fillna(value=0)
-    feature_table = feature_table.groupby(by=feature_table.index, axis=0).sum()
-
-tax_ordered = []
-for row in feature_table.index.values:
-  tax_ordered.append(taxonomy.loc[row, 'Taxon'])
-
-feature_table['Taxonomy'] = tax_ordered
-bac_in_ft = []
-for row in feature_table.index.values:
-  if 'Bacteria' in feature_table.loc[row, 'Taxonomy']:
-    bac_in_ft.append(row)
-
-feature_table = feature_table.loc[bac_in_ft, :]
-# keeping_species, keeping_genus = [], []
-# for row in feature_table.index.values:
-#   if 's__' in feature_table.loc[row, 'Taxonomy']:
-#     keeping_species.append(row)
-#   if 'g__' in feature_table.loc[row, 'Taxonomy']:
-#     keeping_genus.append(row)
-    
-
-# species_table = pd.DataFrame(feature_table.loc[keeping_species, :])
-# genus_table = pd.DataFrame(feature_table.loc[keeping_genus, :])
-species_table = pd.DataFrame(feature_table)
-genus_table = pd.DataFrame(feature_table)
-
-rename_species, rename_genus = {}, {}
-for row in species_table.index.values:
-  if 's__' in species_table.loc[row, 'Taxonomy']:
-    species = species_table.loc[row, 'Taxonomy'].split('s__')[1].replace('_', ' ')
-  else:
-    species = species_table.loc[row, 'Taxonomy'].split(';')[-1].replace('_', ' ')
-  rename_species[row] = species
-
-for row in genus_table.index.values:
-  if 'g__' not in genus_table.loc[row, 'Taxonomy']:
-    genus = genus_table.loc[row, 'Taxonomy'].split(';')[-1].replace('_', ' ')
-  else:
-    genus = genus_table.loc[row, 'Taxonomy'].split('g__')[1]
-    if 's__' in genus: genus = genus.split(';')[0]
-    genus = genus.replace('_', ' ')
-  rename_genus[row] = genus
-
-species_table = species_table.rename(index=rename_species).drop('Taxonomy', axis=1)
-genus_table = genus_table.rename(index=rename_genus).drop('Taxonomy', axis=1)
-
-species_table = species_table.groupby(by=species_table.index, axis=0).sum()
-genus_table = genus_table.groupby(by=genus_table.index, axis=0).sum()
-
-species_table.to_csv(folder_16S+'species_table.csv')
-genus_table.to_csv(folder_16S+'genus_table.csv')
-```
-
-## Remove taxa that aren't bacteria from MGS classifications
-
-```{python, eval=FALSE}
-import pickle
-import pandas as pd
-
-files = ['kraken2_bracken_genus.csv', 'MetaPhlAn3_genus.csv', 'kraken2_bracken_species.csv', 'MetaPhlAn3_species.csv']
-pickles = ['combined_dict_genus.dict', 'combined_dict_genus.dict', 'combined_dict_species.dict', 'combined_dict_species.dict']
-
-for f in range(len(files)):
-  if f > 1: continue
-  this_file = pd.read_csv(files[f], index_col=0, header=0)
-  with open(pickles[f], 'rb') as fi:
-    domain_dict = pickle.load(fi)
-  this_file['Domain'] = ''
-  classification, taxid = [], []
-  for row in this_file.index.values:
-    if row.count(",") > 1:
-      new_row = row.replace('(', '').replace(')', '').replace('"', "").rsplit(', ', 1)
-    else:
-      new_row = row.replace('(', '').replace(')', '').replace("'", "").split(', ')
-    classification.append(new_row[0].replace('_', ' '))
-    taxid.append(new_row[1])
-    this_file.loc[row, 'Domain'] = domain_dict[new_row[-1]]
-  this_file['Classification'] = classification
-  this_file['Taxid'] = taxid
-  this_file = this_file.reset_index().set_index(['Classification', 'Taxid']).drop('index', axis=1)
-  this_file = this_file[this_file['Domain'] == 'Bacteria']
-  this_file = this_file.drop('Domain', axis=1)
-  this_file.to_csv(files[f].replace('.csv', '_bacteria.csv'))
-  print(files[f], this_file)
-```
-
-## Calculate diversity
-
-```{python, eval=FALSE}
-from skbio.diversity import get_alpha_diversity_metrics, get_beta_diversity_metrics, alpha_diversity, beta_diversity
-all_files = ['16S_datasets/species_table.csv', '16S_datasets/genus_table.csv', 'kraken2_bracken_genus_bacteria.csv', 'kraken2_bracken_species_bacteria.csv', 'MetaPhlAn3_genus_bacteria.csv', 'MetaPhlAn3_species_bacteria.csv']
-metrics = {"Simpson's diversity":['simpsons_diversity', 'alpha', 'simpson'],
-            'Shannon diversity':['shannon_diversity', 'alpha', 'shannon'],
-            'Chao1 richness':['chao1_richness', 'alpha', 'chao1'],
-            "McIntosh's evenness":['mcintosh_evenness', 'alpha', 'mcintosh_e'],
-            "Pielou evenness":['pielou_evenness', 'alpha', 'pielou_e'],
-            "Simpson's evenness":['simpson_evenness', 'alpha', 'simpson_e']}
-
-for f in all_files:
-  all_calculations = []
-  file = pd.read_csv(direc_validation+f, index_col=0, header=0)
-  if 'Taxid' in file.columns: file = file.drop('Taxid', axis=1)
-  for sample in file.columns:
-      calculations = []
-      for metric in metrics:
-        val = list(alpha_diversity(metrics[metric][2], list(file.loc[:, sample].values)))[0]
-        calculations.append(val)
-      all_calculations.append(calculations)
-  
-  calcs = pd.DataFrame(all_calculations, columns=[metric for metric in metrics], index=file.columns).fillna(value=0)
-  calcs.to_csv(direc_validation+'analysis/'+f.replace('.csv', '_calculations.csv').replace('16S_datasets/', ''))
-```
-
-## Get overlapping genera
-
-Rename 16S:
-```{python, eval=FALSE}
-genus = pd.read_csv(direc_validation+'16S_datasets/genus_table.csv', index_col=0, header=0)
-species = pd.read_csv(direc_validation+'16S_datasets/species_table.csv', index_col=0, header=0)
-
-cameroon_names = pd.read_csv(direc_validation+'cameroon_names.txt', index_col=1, header=0, sep='\t')
-cameroon_rename = {}
-for row in cameroon_names.index.values:
-    cameroon_rename[cameroon_names.loc[row, 'sample_title'].replace('Cam2013_', '')] = cameroon_names.loc[row, 'run_accession']
-
-indian_names = pd.read_csv(direc_validation+'indian_names.txt', index_col=4, header=0, sep='\t')
-indian_rename = {}
-for row in indian_names.index.values:
-    if indian_names.loc[row, 'library_strategy'] != 'WGS': continue
-    indian_rename[indian_names.loc[row, 'sample_alias']] = indian_names.loc[row, 'run_accession']
-
-ocean_16S = pd.read_csv(direc_validation+'ocean_16S.txt', header=0, index_col=0)
-ocean_MGS = pd.read_csv(direc_validation+'ocean_MGS.txt', header=0, index_col=0)
-rename_16S, name_16S_to_MGS = {}, {}
-MGS_sample_to_acc = {}
-for row in ocean_16S.index.values:
-    rename_16S[row] = ocean_16S.loc[row, 'Library Name']
-for row in ocean_MGS.index.values:
-    MGS_sample_to_acc[ocean_MGS.loc[row, 'Sample Name'].split(':')[0]] = row
-for sample in rename_16S:
-    if rename_16S[sample] in MGS_sample_to_acc:
-        name_16S_to_MGS[sample] = MGS_sample_to_acc[rename_16S[sample]]
-
-rename_16S = {}
-for row in genus.columns:
-    if '11212.' in row:
-        rename_16S[row] = row.replace('11212.', '')
-    elif 'blueberry' in row:
-        rename_16S[row] = row.replace('Bact', 'BB')
-    elif 'cameroon' in row:
-        try:
-            sn = row.split('_')[1]
-            rename_16S[row] = row.replace(sn, cameroon_rename[sn])
-        except:
-            do_nothing = True
-    elif 'indian' in row:
-        try:
-            sn = row.split('_')[1]
-            rename_16S[row] = row.replace(sn, indian_rename[sn])
-        except:
-            do_nothing = True
-    elif 'ocean' in row:
-        try:
-            sn = row.split('_')[1]
-            rename_16S[row] = row.replace(sn, name_16S_to_MGS[sn])
-        except:
-            do_nothing = True
-    
-genus = genus.rename(columns=rename_16S)
-species = species.rename(columns=rename_16S)
-genus.to_csv(direc_validation+'16S_datasets/genus_table_rename.csv')
-species.to_csv(direc_validation+'16S_datasets/species_table_rename.csv')
-
-genus_calcs = pd.read_csv(direc_validation+'analysis/genus_table_calculations.csv', index_col=0, header=0)
-species_calcs = pd.read_csv(direc_validation+'analysis/species_table_calculations.csv', index_col=0, header=0)
-genus_calcs = genus_calcs.rename(index=rename_16S)
-species_calcs = species_calcs.rename(index=rename_16S)
-genus_calcs.to_csv(direc_validation+'analysis/genus_table_calculations_rename.csv')
-species_calcs.to_csv(direc_validation+'analysis/species_table_calculations_rename.csv')
-```
-
-```{python, eval=FALSE}
-genus_16S = '16S_datasets/genus_table_rename.csv'
-others = ['MetaPhlAn3_genus_bacteria.csv', 'kraken2_bracken_genus_bacteria.csv']
-
-genus_16S = pd.read_csv(direc_validation+genus_16S, index_col=0, header=0)
-genus_level = []
-for row in genus_16S.index.values:
-  if row[0] != ' ': genus_level.append(row)
-
-genus_16S = genus_16S.loc[genus_level, :]
-prec_rec_df = []
-
-for group in others:
-  sample_names, sample_recall_precision = [], []
-  this_genus = pd.read_csv(direc_validation+group, index_col=0, header=0)
-  count = 0
-  for sample in this_genus.columns:
-    if sample == 'Taxid': continue
-    #if count > 10: break
-    this_sample = pd.DataFrame(this_genus.loc[:, sample])
-    this_sample = this_sample[this_sample.max(axis=1) > 0]
-    if '-' in sample:
-      sn = sample.split('-')[0]
-    else:
-      sn = sample.replace('.R1', '')
-    if this_sample.shape[0] == 0: 
-      sample_names.append(sample)
-      sample_recall_precision.append([0, 0])
-      continue
-    try:
-      sample_16S = pd.DataFrame(genus_16S.loc[:, sn])
-      sample_16S = sample_16S[sample_16S.max(axis=1) > 0]
-      overlap = len([gen for gen in this_sample.index.values if gen in sample_16S.index.values])
-      sample_names.append(sample)
-      sample_recall_precision.append([overlap/len(sample_16S.index.values), overlap/len(this_sample.index.values)])
-    except:
-      # if sn not in genus_16S.columns:
-      #   print(sn)
-      do_nothing = True
-    count += 1
-  
-  print(len(sample_recall_precision), len(sample_names))
-  this_df = pd.DataFrame(sample_recall_precision, index=sample_names, columns=['Recall', 'Precision'])
-  prec_rec_df.append(this_df)
-  this_df.to_csv(direc_validation+'analysis/'+group.replace('.csv', '_precision_recall.csv'))
-```
-
-## Number of genera
-
-```{python, eval=FALSE}
-genus_16S = '16S_datasets/genus_table_rename.csv'
-others = ['MetaPhlAn3_genus_bacteria.csv', 'kraken2_bracken_genus_bacteria.csv']
-genus_16S = pd.read_csv(direc+'picrust_validation/'+genus_16S, index_col=0, header=0)
-for a in range(len(others)):
-  others[a] = pd.read_csv(direc+'picrust_validation/'+others[a], index_col=0, header=0).drop('Taxid', axis=1)
-
-others = [genus_16S]+others
-all_df = []
-names = ['16S_genus_count.csv', 'MetaPhlAn3_genus_count.csv', 'kraken2_genus_count.csv']
-
-for a in range(len(others)):
-  this_df = []
-  for col in others[a].columns:
-    this_sample = pd.DataFrame(others[a].loc[:, col])
-    this_sample = this_sample[this_sample.max(axis=1) > 0]
-    orig_shape = this_sample.shape[0]
-    if a == 0:
-      keeping = []
-      for row in this_sample.index.values:
-        if row[0] != ' ': keeping.append(row)
-      this_sample = this_sample.loc[keeping, :]
-    this_df.append([col.replace('.genus', ''), orig_shape, this_sample.shape[0]])
-  this_df = pd.DataFrame(this_df, columns=['Sample', 'All classifications', 'Genus classification only'])
-  all_df.append(this_df)
-  this_df.set_index('Sample').to_csv(direc+'picrust_validation/analysis/'+names[a])
-```
-
-Add counts to calculations:
-```{python}
-folder = direc+'picrust_validation/analysis/'
-calculations = ['genus_table_calculations_rename.csv', 'kraken2_bracken_genus_bacteria_calculations.csv', 'MetaPhlAn3_genus_bacteria_calculations.csv']
-genus_counts = ['16S_genus_count.csv', 'kraken2_genus_count.csv', 'MetaPhlAn3_genus_count.csv']
-
-for a in range(len(calculations)):
-  this_calc = pd.read_csv(folder+calculations[a], index_col=0, header=0)
-  if a == 1:
-    rename = {}
-    for row in this_calc.index.values:
-      rename[row] = row.replace('.genus', '')
-    this_calc = this_calc.rename(index=rename)
-  genus_counts[a] = pd.read_csv(folder+genus_counts[a], index_col=0, header=0)
-  this_calc = pd.concat([this_calc, genus_counts[a]]).fillna(value=0)
-  this_calc = this_calc.groupby(by=this_calc.index, axis=0).sum()
-  this_calc.to_csv(folder+calculations[a].replace('.csv', '_genus_count.csv'))
-```
-
-## Number of species
-
-```{python, eval=FALSE}
-genus_16S = '16S_datasets/species_table_rename.csv'
-others = ['MetaPhlAn3_species_bacteria.csv', 'kraken2_bracken_species_bacteria.csv']
-genus_16S = pd.read_csv(direc+'picrust_validation/'+genus_16S, index_col=0, header=0)
-for a in range(len(others)):
-  others[a] = pd.read_csv(direc+'picrust_validation/'+others[a], index_col=0, header=0).drop('Taxid', axis=1)
-
-others = [genus_16S]+others
-all_df = []
-names = ['16S_species_count.csv', 'MetaPhlAn3_species_count.csv', 'kraken2_species_count.csv']
-
-for a in range(len(others)):
-  this_df = []
-  for col in others[a].columns:
-    this_sample = pd.DataFrame(others[a].loc[:, col])
-    this_sample = this_sample[this_sample.max(axis=1) > 0]
-    orig_shape = this_sample.shape[0]
-    if a == 0:
-      keeping = []
-      for row in this_sample.index.values:
-        if row[0] != ' ': keeping.append(row)
-      this_sample = this_sample.loc[keeping, :]
-    this_df.append([col.replace('.genus', ''), orig_shape, this_sample.shape[0]])
-  this_df = pd.DataFrame(this_df, columns=['Sample', 'All classifications', 'Species classification only'])
-  all_df.append(this_df)
-  this_df.set_index('Sample').to_csv(direc+'picrust_validation/analysis/'+names[a])
-```
-
-Add counts to calculations:
-```{python}
-folder = direc+'picrust_validation/analysis/'
-calculations = ['species_table_calculations_rename.csv', 'kraken2_bracken_species_bacteria_calculations.csv', 'MetaPhlAn3_species_bacteria_calculations.csv']
-species_counts = ['16S_species_count.csv', 'kraken2_species_count.csv', 'MetaPhlAn3_species_count.csv']
-
-for a in range(len(calculations)):
-  this_calc = pd.read_csv(folder+calculations[a], index_col=0, header=0)
-  species_counts[a] = pd.read_csv(folder+species_counts[a], index_col=0, header=0)
-  this_calc = pd.concat([this_calc, species_counts[a]]).fillna(value=0)
-  this_calc = this_calc.groupby(by=this_calc.index, axis=0).sum()
-  this_calc.to_csv(folder+calculations[a].replace('.csv', '_species_count.csv'))
-```
-
-## Get proportion of reads classified
-
-Kraken:
-```{python, eval=FALSE}
-import os
-import pandas as pd
-
-folder = 'kraken2_kreport/'
-files = [f for f in os.listdir(folder) if 'bracken' not in f]
-all_files = []
-count = 0
-for fi in files:
-  count += 1
-  #if count > 2: break
-  this_file = []
-  fn = fi.replace('.fastq', '').replace('.kreport', '').replace('_R1_R2_cat', '').replace('R1.', '').rsplit('.', 2)
-  fn = fn[0]+'-'+fn[1]+'.'+fn[2]
-  for row in open(folder+fi, 'r'):
-    row = row.split('\t')
-    if row[3] in ['U', 'R', 'D']:
-      this_file.append([row[5].strip(), int(row[1])])
-  this_file = pd.DataFrame(this_file, columns=['Level', fn]).set_index('Level')
-  if isinstance(all_files, list):
-    all_files = pd.DataFrame(this_file)
-  else:
-    all_files = pd.concat([all_files, this_file]).fillna(value=0)
-    all_files = all_files.groupby(by=all_files.index, axis=0).sum()
-
-all_files.to_csv('kraken2_reads_classified.csv')
-```
-
-MetaPhlAn:
-```{python, eval=FALSE}
-import os
-import pandas as pd
-
-folder = 'metaphlan_out/'
-files = os.listdir(folder)
-all_files = []
-for fi in files:
-  fn = fi.replace('.fastq', '').replace('.txt', '').replace('_R1_R2_cat', '').replace('R1.', '')
-  this_file = []
-  for row in open(folder+fi, 'r'):
-    row = row.replace('\n', '').split('\t')
-    if row[0].count('|') == 0:
-      if 'k__' in row[0] or 'UNKNOWN' in row[0]:
-        if 'k__' in row[0]:
-          this_file.append([row[0].split('k__')[-1], int(row[-1])])
-        else:
-          this_file.append([row[0], int(row[-1])])
-      if 'estimated_reads' in row[0]:
-        this_file.append(['Estimated mapped reads', int(row[0].split(':')[-1])])
-  this_file = pd.DataFrame(this_file, columns=['Level', fn]).set_index('Level')
-  if isinstance(all_files, list):
-    all_files = pd.DataFrame(this_file)
-  else:
-    all_files = pd.concat([all_files, this_file]).fillna(value=0)
-    all_files = all_files.groupby(by=all_files.index, axis=0).sum()
-
-all_files.to_csv('MetaPhlAn3_reads_classified.csv')
-```
-
 # Calculate size of genomes for different domains:
 
 ```{python, eval=FALSE}
@@ -3712,3 +3236,2545 @@ for assembly in assembly_lists:
     for genome in not_in_folder:
       f.write(genome+'\n')
 ```
+
+# Get CAMI2 datasets
+
+Get samples:
+```{bash, eval=FALSE}
+#marine
+parallel -j 3 --progress 'wget https://frl.publisso.de/data/frl:6425521/marine/short_read/marmgCAMI2_sample_{1}_reads.tar.gz' ::: {0..10} #done
+wget https://frl.publisso.de/data/frl:6425521/marine/short_read/marmgCAMI2_setup.tar.gz #done
+
+#plant associated
+parallel -j 3 --progress 'wget https://frl.publisso.de/data/frl:6425521/plant_associated/short_read/rhimgCAMI2_sample_{1}_reads.tar.gz' ::: {1..21} #done
+wget https://frl.publisso.de/data/frl:6425521/plant_associated/short_read/rhimgCAMI2_setup.tar.gz #done
+
+#strain
+parallel -j 3 --progress 'wget https://frl.publisso.de/data/frl:6425521/strain/short_read/strmgCAMI2_sample_{1}_reads.tar.gz' ::: {0..100} #done
+wget https://frl.publisso.de/data/frl:6425521/strain/short_read/strmgCAMI2_setup.tar.gz #done
+
+#mouse gut
+parallel -j 3 --progress 'wget https://frl.publisso.de/data/frl:6421672/dataset/2017.12.29_11.37.26_sample_{1}_reads.tar' ::: {0..64} #done
+wget https://frl.publisso.de/data/frl:6421672/dataset/CAMISIM_setup.tar.gz #done
+
+#human gut
+#data doesn't seem to be there yet?
+
+
+#taxonomic binnings
+#wget https://zenodo.org/record/4982288/files/taxonomic_binning_cami2.tar.gz?download=1 - this seems to be in the setup file for each dataset
+```
+
+## Sort samples
+
+Unzip all tar files:
+```{bash, eval=FALSE}
+#marine
+parallel -j 4 --progress 'tar -xvf {1}' ::: *.tar.gz
+
+#plant
+parallel -j 3 --progress 'tar -xvf {1}' ::: *
+
+#mouse
+parallel -j 3 --progress 'tar -xvf {1}' ::: *.tar
+
+#strain
+parallel -j 3 --progress 'tar -xvf {1}' ::: *
+
+#Also moved all of the original tar files to storage (they are not actually any smaller because the files within them are compressed anyway)
+```
+
+Marine move samples and rename:
+```{python, eval=FALSE}
+import os
+
+samples = os.listdir('simulation_short_read/')
+samples = [s for s in samples if 'sample_' in s]
+for s in samples:
+  reads = 'simulation_short_read/'+s+'/reads/anonymous_reads.fq.gz'
+  new_name = 'marine_sample'+s.split('_sample')[1]+'.fq.gz'
+  os.system('mv '+reads+' '+new_name)
+```
+
+Plant move samples and rename:
+```{python, eval=FALSE}
+import os
+
+samples = os.listdir('simulation_short_read/')
+samples = [s for s in samples if 'sample_' in s]
+for s in samples:
+  reads = 'simulation_short_read/'+s+'/reads/anonymous_reads.fq.gz'
+  new_name = 'plant_sample'+s.split('_sample')[1]+'.fq.gz'
+  os.system('mv '+reads+' '+new_name)
+```
+
+Strain move samples and rename:
+```{python, eval=FALSE}
+import os
+
+samples = os.listdir('short_read/')
+samples = [s for s in samples if 'sample_' in s]
+for s in samples:
+  reads = 'short_read/'+s+'/reads/anonymous_reads.fq.gz'
+  new_name = 'strain_sample'+s.split('_sample')[1]+'.fq.gz'
+  os.system('mv '+reads+' '+new_name)
+```
+
+Mouse move samples and rename:
+```{python, eval=FALSE}
+import os
+
+samples = os.listdir('mouse/')
+samples = [s for s in samples if 'sample_' in s and 'tar' not in s]
+for s in samples:
+  reads = 'mouse/'+s+'/reads/anonymous_reads.fq.gz'
+  new_name = 'mouse/mouse_sample'+s.split('_sample')[1]+'.fq.gz'
+  os.system('mv '+reads+' '+new_name)
+```
+
+## Classify samples
+
+### Kraken2
+
+Kraken RefSeq Complete V205:
+```{bash, eval=FALSE}
+#done
+sudo cp -a /home/shared/Kraken2_RefSeqCompleteV205/ /scratch/ramdisk/
+mkdir kraken2_outraw
+mkdir kraken2_kreport
+mkdir kraken2_kreport/RefSeqCompleteV205
+mkdir kraken2_outraw/RefSeqCompleteV205
+mkdir redo/kraken2_kreport/RefSeqCompleteV205
+mkdir redo/kraken2_outraw/RefSeqCompleteV205
+
+parallel -j 2 --progress 'kraken2 --use-names --threads 24 --db {3} --memory-mapping {1} --output kraken2_outraw/RefSeqCompleteV205/{1/.}.kraken --report kraken2_kreport/RefSeqCompleteV205/{1/.}.{2}.kreport --confidence {2}' ::: all_samples/* ::: 0.05 0.10 0.15 0.20 0.25 0.30 0.35 0.40 0.45 0.50 0.55 0.60 0.65 0.70 0.75 0.80 0.85 0.90 0.95 1.00 0.00 ::: /scratch/ramdisk/Kraken2_RefSeqCompleteV205/
+
+parallel -j 2 --progress 'kraken2 --use-names --threads 24 --db {3} --memory-mapping {1} --output redo/kraken2_outraw/RefSeqCompleteV205/{1/.}.kraken --report redo/kraken2_kreport/RefSeqCompleteV205/{1/.}.{2}.kreport --confidence {2}' ::: all_samples/* ::: 0.00 ::: /scratch/ramdisk/Kraken2_RefSeqCompleteV205/
+
+parallel -j 48 'bracken -d {2} -i {1} -l S -o {1.}.bracken -r 150' ::: kraken2_kreport/RefSeqCompleteV205/*.kreport ::: /scratch/ramdisk/Kraken2_RefSeqCompleteV205/
+mkdir kraken2_bracken_species
+mkdir kraken2_bracken_species/RefSeqCompleteV205/
+mv kraken2_kreport/RefSeqCompleteV205/*bracken* kraken2_bracken_species/RefSeqCompleteV205/
+
+parallel -j 48 'bracken -d {2} -i {1} -l G -o {1.}.genus.bracken -r 150' ::: kraken2_kreport/RefSeqCompleteV205/*.kreport ::: /home/shared/Kraken2_RefSeqCompleteV205/
+mkdir kraken2_bracken_genus
+mkdir kraken2_bracken_genus/RefSeqCompleteV205/
+mv kraken2_kreport/RefSeqCompleteV205/*genus.bracken kraken2_bracken_genus/RefSeqCompleteV205/
+
+sudo rm -r /scratch/ramdisk/Kraken2_RefSeqCompleteV205/
+
+```
+
+Kraken RefSeq Complete V205 index runs:
+```{bash, eval=FALSE}
+#done
+sudo cp -a /home/shared/Kraken2_RefSeqCompleteV205/ /scratch/ramdisk/
+mkdir index
+mkdir index/kraken2_outraw
+mkdir index/kraken2_kreport
+
+parallel -j 2 --progress 'kraken2 --use-names --threads 24 --db {3} --memory-mapping {1} --output index/kraken2_outraw/{1/.}.{2}.kraken --report index/kraken2_kreport/{1/.}.{2}.kreport --confidence {2}' ::: all_samples/marine* ::: 0.05 0.10 0.15 0.20 0.25 0.30 0.35 0.40 0.45 0.50 0.55 0.60 0.65 0.70 0.75 0.80 0.85 0.90 0.95 1.00 ::: /scratch/ramdisk/Kraken2_RefSeqCompleteV205/
+
+
+
+
+parallel -j 2 --progress 'kraken2 --use-names --threads 24 --db {3} --memory-mapping {1} --output index/kraken2_outraw/{1/.}.{2}.kraken --report index/kraken2_kreport/{1/.}.{2}.kreport --confidence {2}' ::: all_samples/plant* ::: 0.05 0.10 0.15 0.20 0.25 0.30 0.35 0.40 0.45 0.50 0.55 0.60 0.65 0.70 0.75 0.80 0.85 0.90 0.95 1.00 ::: /scratch/ramdisk/Kraken2_RefSeqCompleteV205/
+
+
+
+parallel -j 2 --progress 'kraken2 --use-names --threads 24 --db {3} --memory-mapping {1} --output index/kraken2_outraw/{1/.}.{2}.kraken --report index/kraken2_kreport/{1/.}.{2}.kreport --confidence {2}' ::: all_samples/mouse* ::: 0.05 0.10 0.15 0.20 0.25 0.30 0.35 0.40 0.45 0.50 0.55 0.60 0.65 0.70 0.75 0.80 0.85 0.90 0.95 1.00 ::: /scratch/ramdisk/Kraken2_RefSeqCompleteV205/
+
+
+
+
+parallel -j 2 --progress 'kraken2 --use-names --threads 24 --db {3} --memory-mapping {1} --output index/kraken2_outraw/{1/.}.{2}.kraken --report index/kraken2_kreport/{1/.}.{2}.kreport --confidence {2}' ::: all_samples/strain* ::: 0.05 0.10 0.15 0.20 0.25 0.30 0.35 0.40 0.45 0.50 0.55 0.60 0.65 0.70 0.75 0.80 0.85 0.90 0.95 1.00 ::: /scratch/ramdisk/Kraken2_RefSeqCompleteV205/
+```
+
+Kraken RefSeq Complete V205 100 GB:
+```{bash, eval=FALSE}
+#done
+#also saw the error about children - probably just issues with not many reads classified
+#redo done
+sudo cp -r /home/storage/robyn/kraken2_databases/RefSeqV205_Complete_V2_100GB/ /scratch/ramdisk/
+mkdir kraken2_kreport/RefSeqCompleteV205_100GB/
+mkdir kraken2_outraw/RefSeqCompleteV205_100GB/
+mkdir redo/kraken2_kreport/RefSeqCompleteV205_100GB/
+mkdir redo/kraken2_outraw/RefSeqCompleteV205_100GB/
+
+parallel -j 2 --progress 'kraken2 --use-names --threads 18 --db {3} --memory-mapping {1} --output kraken2_outraw/RefSeqCompleteV205_100GB/{1/.}.kraken --report kraken2_kreport/RefSeqCompleteV205_100GB/{1/.}.{2}.kreport --confidence {2}' ::: all_samples/* ::: 0.05 0.10 0.15 0.20 0.25 0.30 0.35 0.40 0.45 0.50 0.55 0.60 0.65 0.70 0.75 0.80 0.85 0.90 0.95 1.00 0.00 ::: /scratch/ramdisk/RefSeqV205_Complete_V2_100GB/
+
+parallel -j 1 --progress 'kraken2 --use-names --threads 12 --db {3} --memory-mapping {1} --output redo/kraken2_outraw/RefSeqCompleteV205_100GB/{1/.}.kraken --report redo/kraken2_kreport/RefSeqCompleteV205_100GB/{1/.}.{2}.kreport --confidence {2}' ::: all_samples/* ::: 0.00 ::: /scratch/ramdisk/RefSeqV205_Complete_V2_100GB/
+
+parallel -j 6 'bracken -d {2} -i {1} -l S -o {1.}.bracken -r 150' ::: kraken2_kreport/RefSeqCompleteV205_100GB/*.kreport ::: /home/storage/robyn/kraken2_databases/RefSeqV205_Complete_V2_100GB/
+mkdir kraken2_bracken_species/RefSeqCompleteV205_100GB/
+mv kraken2_kreport/RefSeqCompleteV205_100GB/*bracken* kraken2_bracken_species/RefSeqCompleteV205_100GB/
+
+#Run also with redo because there seems to be an issue with the 0 confidence threshold
+parallel -j 6 'bracken -d {2} -i {1} -l S -o {1.}.bracken -r 150' ::: redo/kraken2_kreport/RefSeqCompleteV205_100GB/*.kreport ::: /home/storage/robyn/kraken2_databases/RefSeqV205_Complete_V2_100GB/
+mv redo/kraken2_kreport/RefSeqCompleteV205_100GB/*bracken* kraken2_bracken_species/RefSeqCompleteV205_100GB/
+
+parallel -j 36 'bracken -d {2} -i {1} -l G -o {1.}.genus.bracken -r 150' ::: kraken2_kreport/RefSeqCompleteV205_100GB/*.kreport ::: /home/storage/robyn/kraken2_databases/RefSeqV205_Complete_V2_100GB/
+mkdir kraken2_bracken_genus/RefSeqCompleteV205_100GB/
+mv kraken2_kreport/RefSeqCompleteV205_100GB/*genus.bracken kraken2_bracken_genus/RefSeqCompleteV205_100GB/
+
+sudo rm -r /scratch/ramdisk/RefSeqV205_Complete_V2_100GB/
+```
+
+Kraken RefSeq Complete V205 500 GB:
+```{bash, eval=FALSE}
+#done
+#redo doing
+sudo cp -r /home/storage/robyn/kraken2_databases/RefSeqV205_Complete_V2_500GB/ /scratch/ramdisk/
+mkdir kraken2_kreport/RefSeqCompleteV205_500GB/
+mkdir kraken2_outraw/RefSeqCompleteV205_500GB/
+mkdir redo/kraken2_kreport/RefSeqCompleteV205_500GB/
+mkdir redo/kraken2_outraw/RefSeqCompleteV205_500GB/
+
+parallel -j 2 --progress 'kraken2 --use-names --threads 18 --db {3} --memory-mapping {1} --output kraken2_outraw/RefSeqCompleteV205_500GB/{1/.}.kraken --report kraken2_kreport/RefSeqCompleteV205_500GB/{1/.}.{2}.kreport --confidence {2}' ::: all_samples/* ::: 0.05 0.10 0.15 0.20 0.25 0.30 0.35 0.40 0.45 0.50 0.55 0.60 0.65 0.70 0.75 0.80 0.85 0.90 0.95 1.00 0.00 ::: /scratch/ramdisk/RefSeqV205_Complete_V2_500GB/
+
+parallel -j 1 --progress 'kraken2 --use-names --threads 12 --db {3} --memory-mapping {1} --output redo/kraken2_outraw/RefSeqCompleteV205_500GB/{1/.}.kraken --report redo/kraken2_kreport/RefSeqCompleteV205_500GB/{1/.}.{2}.kreport --confidence {2}' ::: all_samples/* ::: 0.00 ::: /scratch/ramdisk/RefSeqV205_Complete_V2_500GB/
+
+parallel -j 36 'bracken -d {2} -i {1} -l S -o {1.}.bracken -r 150' ::: kraken2_kreport/RefSeqCompleteV205_500GB/*.kreport ::: /scratch/ramdisk/RefSeqV205_Complete_V2_500GB/
+mkdir kraken2_bracken_species/RefSeqCompleteV205_500GB/
+mv kraken2_kreport/RefSeqCompleteV205_500GB/*bracken* kraken2_bracken_species/RefSeqCompleteV205_500GB/
+
+parallel -j 36 'bracken -d {2} -i {1} -l G -o {1.}.genus.bracken -r 150' ::: kraken2_kreport/RefSeqCompleteV205_500GB/*.kreport ::: /scratch/ramdisk/RefSeqV205_Complete_V2_500GB/
+mkdir kraken2_bracken_genus/RefSeqCompleteV205_500GB/
+mv kraken2_kreport/RefSeqCompleteV205_500GB/*bracken* kraken2_bracken_genus/RefSeqCompleteV205_500GB/
+
+sudo rm -r /scratch/ramdisk/RefSeqV205_Complete_V2_500GB/
+```
+
+GTDB r202 + NCBI RefSeq V205:
+```{bash, eval=FALSE}
+sudo cp -a /home/storage/robyn/kraken2_databases/kraken2_GTDBr202_RefSeqV205/ /scratch/ramdisk/
+mkdir kraken2_kreport/GTDBr202RefSeqV205/
+mkdir kraken2_outraw/GTDBr202RefSeqV205/
+mkdir redo/kraken2_kreport/GTDBr202RefSeqV205/
+mkdir redo/kraken2_outraw/GTDBr202RefSeqV205/
+
+parallel -j 2 --progress '/home/robyn/anaconda3/bin/kraken2 --use-names --threads 24 --db {3} --memory-mapping {1} --output kraken2_outraw/GTDBr202RefSeqV205/{1/.}.kraken --report kraken2_kreport/GTDBr202RefSeqV205/{1/.}.{2}.kreport --confidence {2}' ::: all_samples/* ::: 0.00 0.05 0.10 0.15 0.20 0.25 0.30 0.35 0.40 0.45 0.50 0.55 0.60 0.65 0.70 0.75 0.80 0.85 0.90 0.95 1.00 ::: /scratch/ramdisk/kraken2_GTDBr202_RefSeqV205/
+
+parallel -j 2 --progress '/home/robyn/anaconda3/bin/kraken2 --use-names --threads 24 --db {3} --memory-mapping {1} --output redo/kraken2_outraw/GTDBr202RefSeqV205/{1/.}.kraken --report redo/kraken2_kreport/GTDBr202RefSeqV205/{1/.}.{2}.kreport --confidence {2}' ::: all_samples/* ::: 0.00 ::: /scratch/ramdisk/kraken2_GTDBr202_RefSeqV205/
+
+parallel -j 48 'bracken -d {2} -i {1} -l S -o {1.}.bracken -r 150' ::: kraken2_kreport/GTDBr202RefSeqV205/*.kreport ::: /scratch/ramdisk/kraken2_GTDBr202_RefSeqV205/
+mkdir kraken2_bracken_species/GTDBr202RefSeqV205/
+mv kraken2_kreport/GTDBr202RefSeqV205/*bracken* kraken2_bracken_species/GTDBr202RefSeqV205/
+
+parallel -j 48 'bracken -d {2} -i {1} -l G -o {1.}.genus.bracken -r 150' ::: kraken2_kreport/GTDBr202RefSeqV205/*.kreport ::: /scratch/ramdisk/kraken2_GTDBr202_RefSeqV205/
+mkdir kraken2_bracken_genus/GTDBr202RefSeqV205/
+mv kraken2_kreport/GTDBr202RefSeqV205/*bracken* kraken2_bracken_genus/GTDBr202RefSeqV205/
+
+sudo rm -r /scratch/ramdisk/kraken2_GTDBr202_RefSeqV205/
+```
+
+MiniKraken V2:
+```{bash, eval=FALSE}
+#might be issues with because there was some error often about children
+#done
+#redo done
+sudo cp -a /home/storage/robyn/kraken2_databases/minikraken2_v2_8GB_201904_UPDATE/ /scratch/ramdisk/
+mkdir kraken2_kreport/minikraken/
+mkdir kraken2_outraw/minikraken/
+mkdir redo/kraken2_kreport/minikraken/
+mkdir redo/kraken2_outraw/minikraken/
+
+parallel -j 2 --progress 'kraken2 --use-names --threads 18 --db {3} --memory-mapping {1} --output kraken2_outraw/minikraken/{1/.}.kraken --report kraken2_kreport/minikraken/{1/.}.{2}.kreport --confidence {2}' ::: all_samples/* ::: 0.05 0.10 0.15 0.20 0.25 0.30 0.35 0.40 0.45 0.50 0.55 0.60 0.65 0.70 0.75 0.80 0.85 0.90 0.95 1.00 0.00 ::: /scratch/ramdisk/minikraken2_v2_8GB_201904_UPDATE/
+
+parallel -j 1 --progress 'kraken2 --use-names --threads 12 --db {3} --memory-mapping {1} --output redo/kraken2_outraw/minikraken/{1/.}.kraken --report redo/kraken2_kreport/minikraken/{1/.}.{2}.kreport --confidence {2}' ::: all_samples/* ::: 0.00 ::: /scratch/ramdisk/minikraken2_v2_8GB_201904_UPDATE/
+
+parallel -j 36 'bracken -d {2} -i {1} -l S -o {1.}.bracken -r 150' ::: kraken2_kreport/minikraken/*.kreport ::: /home/storage/robyn/kraken2_databases/minikraken2_v2_8GB_201904_UPDATE/
+mkdir kraken2_bracken_species/minikraken/
+mv kraken2_kreport/minikraken/*bracken* kraken2_bracken_species/minikraken/
+
+parallel -j 36 'bracken -d {2} -i {1} -l G -o {1.}.genus.bracken -r 150' ::: kraken2_kreport/minikraken/*.kreport ::: /home/storage/robyn/kraken2_databases/minikraken2_v2_8GB_201904_UPDATE/
+mkdir kraken2_bracken_genus/minikraken/
+mv kraken2_kreport/minikraken/*bracken* kraken2_bracken_genus/minikraken/
+
+sudo rm -r /scratch/ramdisk/minikraken2_v2_8GB_201904_UPDATE/
+```
+
+ChocoPhlAn:
+```{bash, eval=FALSE}
+#done
+#redo done
+sudo cp -a /home/storage/robyn/kraken2_databases/kraken2_chocophlanV30-201901/ /scratch/ramdisk/
+mkdir redo
+mkdir redo/kraken2_kreport
+mkdir redo/kraken2_outraw
+mkdir redo/kraken2_kreport/chocophlan/
+mkdir redo/kraken2_outraw/chocophlan/
+mkdir kraken2_kreport/chocophlan/
+mkdir kraken2_outraw/chocophlan/
+
+parallel -j 2 --progress 'kraken2 --use-names --threads 18 --db {3} --memory-mapping {1} --output redo/kraken2_outraw/chocophlan/{1/.}.kraken --report redo/kraken2_kreport/chocophlan/{1/.}.{2}.kreport --confidence {2}' ::: all_samples/* ::: 0.05 0.10 0.15 0.20 0.25 0.30 0.35 0.40 0.45 0.50 0.55 0.60 0.65 0.70 0.75 0.80 0.85 0.90 0.95 1.00 0.00 ::: /scratch/ramdisk/kraken2_chocophlanV30-201901/
+
+parallel -j 36 'bracken -d {2} -i {1} -l S -o {1.}.bracken -r 150' ::: kraken2_kreport/chocophlan/*.kreport ::: /home/storage/robyn/kraken2_databases/kraken2_chocophlanV30-201901/
+mkdir kraken2_bracken_species/chocophlan/
+mv kraken2_kreport/chocophlan/*bracken* kraken2_bracken_species/chocophlan/
+
+parallel -j 36 'bracken -d {2} -i {1} -l G -o {1.}.genus.bracken -r 150' ::: kraken2_kreport/chocophlan/*.kreport ::: /home/storage/robyn/kraken2_databases/kraken2_chocophlanV30-201901/
+mkdir kraken2_bracken_genus/chocophlan/
+mv kraken2_kreport/chocophlan/*bracken* kraken2_bracken_genus/chocophlan/
+
+sudo rm -r /scratch/ramdisk/kraken2_chocophlanV30-201901/
+```
+
+RefSeq V208 nt:
+```{bash, eval=FALSE}
+#done
+#redo done
+sudo cp -a /home/storage/robyn/kraken2_databases/kraken2_RefSeqV208_nt/ /scratch/ramdisk/
+mkdir kraken2_kreport/RefSeqV208_nt/
+mkdir kraken2_outraw/RefSeqV208_nt/
+mkdir redo/kraken2_kreport/RefSeqV208_nt/
+mkdir redo/kraken2_outraw/RefSeqV208_nt/
+
+parallel -j 2 --progress 'kraken2 --use-names --threads 18 --db {3} --memory-mapping {1} --output kraken2_outraw/RefSeqV208_nt/{1/.}.kraken --report kraken2_kreport/RefSeqV208_nt/{1/.}.{2}.kreport --confidence {2}' ::: all_samples/* ::: 0.05 0.10 0.15 0.20 0.25 0.30 0.35 0.40 0.45 0.50 0.55 0.60 0.65 0.70 0.75 0.80 0.85 0.90 0.95 1.00 0.00 ::: /scratch/ramdisk/kraken2_RefSeqV208_nt/
+
+parallel -j 1 --progress 'kraken2 --use-names --threads 12 --db {3} --memory-mapping {1} --output redo/kraken2_outraw/RefSeqV208_nt/{1/.}.kraken --report redo/kraken2_kreport/RefSeqV208_nt/{1/.}.{2}.kreport --confidence {2}' ::: all_samples/* ::: 0.00 ::: /scratch/ramdisk/kraken2_RefSeqV208_nt/
+
+parallel -j 36 'bracken -d {2} -i {1} -l S -o {1.}.bracken -r 150' ::: kraken2_kreport/RefSeqV208_nt/*.kreport ::: /scratch/ramdisk/kraken2_RefSeqV208_nt/
+mkdir kraken2_bracken_species/RefSeqV208_nt/
+mv kraken2_kreport/RefSeqV208_nt/*bracken* kraken2_bracken_species/RefSeqV208_nt/
+
+parallel -j 36 'bracken -d {2} -i {1} -l G -o {1.}.genus.bracken -r 150' ::: kraken2_kreport/RefSeqV208_nt/*.kreport ::: /scratch/ramdisk/kraken2_RefSeqV208_nt/
+mkdir kraken2_bracken_genus/RefSeqV208_nt/
+mv kraken2_kreport/RefSeqV208_nt/*bracken* kraken2_bracken_genus/RefSeqV208_nt/
+
+sudo rm -r /scratch/ramdisk/kraken2_RefSeqV208_nt/
+```
+
+Standard:
+```{bash, eval=FALSE}
+#done
+#redo done
+sudo cp -a /home/storage/robyn/kraken2_databases/kraken2_standard_0521/ /scratch/ramdisk/
+mkdir kraken2_kreport/standard/
+mkdir kraken2_outraw/standard/
+mkdir redo/kraken2_kreport/standard/
+mkdir redo/kraken2_outraw/standard/
+
+parallel -j 2 --progress 'kraken2 --use-names --threads 18 --db {3} --memory-mapping {1} --output kraken2_outraw/standard/{1/.}.kraken --report kraken2_kreport/standard/{1/.}.{2}.kreport --confidence {2}' ::: all_samples/* ::: 0.05 0.10 0.15 0.20 0.25 0.30 0.35 0.40 0.45 0.50 0.55 0.60 0.65 0.70 0.75 0.80 0.85 0.90 0.95 1.00 0.00 ::: /scratch/ramdisk/kraken2_standard_0521/
+
+parallel -j 1 --progress 'kraken2 --use-names --threads 12 --db {3} --memory-mapping {1} --output redo/kraken2_outraw/standard/{1/.}.kraken --report redo/kraken2_kreport/standard/{1/.}.{2}.kreport --confidence {2}' ::: all_samples/* ::: 0.00 ::: /scratch/ramdisk/kraken2_standard_0521/
+
+parallel -j 36 'bracken -d {2} -i {1} -l S -o {1.}.bracken -r 150' ::: kraken2_kreport/standard/*.kreport ::: /scratch/ramdisk/kraken2_standard_0521/
+mkdir kraken2_bracken_species/standard/
+mv kraken2_kreport/standard/*bracken* kraken2_bracken_species/standard/
+
+parallel -j 36 'bracken -d {2} -i {1} -l G -o {1.}.genus.bracken -r 150' ::: kraken2_kreport/standard/*.kreport ::: /scratch/ramdisk/kraken2_standard_0521/
+mkdir kraken2_bracken_genus/standard/
+mv kraken2_kreport/standard/*bracken* kraken2_bracken_genus/standard/
+
+sudo rm -r /scratch/ramdisk/kraken2_standard_0521/
+```
+
+Move raw files to storage:
+```{bash, eval=FALSE}
+sudo mv kraken2_outraw/chocophlan/ /home/storage/robyn/kraken_confidence_comparison_all/CAMI2/kraken2_outraw/
+sudo mv kraken2_outraw/minikraken/ /home/storage/robyn/kraken_confidence_comparison_all/CAMI2/kraken2_outraw/
+sudo mv kraken2_outraw/RefSeqCompleteV205_100GB/ /home/storage/robyn/kraken_confidence_comparison_all/CAMI2/kraken2_outraw/
+sudo mv kraken2_outraw/standard/ /home/storage/robyn/kraken_confidence_comparison_all/CAMI2/kraken2_outraw/
+```
+
+### MetaPhlAn
+
+```{bash, eval=FALSE}
+mkdir metaphlan_out
+parallel -j 4 --progress 'metaphlan {} --nproc 12 --input_type fastq --bowtie2db /home/robyn/databases_May2021/metaphlan/ --unknown_estimation -o metaphlan_out/{/.}.txt -t rel_ab_w_read_stats' ::: all_samples/*
+```
+
+## CAMI2 truth
+
+So each sample comes with the Otu that each read is from, along with the taxonomic classification of the Otu. There is also a profile given, but if I will be matching whether each read is correctly classified and then I may as well put together the truth set as I want to, too.
+
+Maybe first I will just go through and get a list of all taxonomy and then I can see at what level they each are classified.
+
+### Move truth samples and rename them in the same way as the samples
+
+Marine:
+```{python, eval=FALSE}
+import os
+
+samples = os.listdir('simulation_short_read/')
+samples = [s for s in samples if 'sample_' in s]
+for s in samples:
+  reads = 'simulation_short_read/'+s+'/reads/reads_mapping.tsv.gz'
+  new_name = 'marine_sample'+s.split('_sample')[1]+'.tsv.gz'
+  print(reads, new_name)
+  os.system('mv '+reads+' '+new_name)
+```
+
+Plant move samples and rename:
+```{python, eval=FALSE}
+import os
+
+samples = os.listdir('simulation_short_read/')
+samples = [s for s in samples if 'sample_' in s]
+for s in samples:
+  reads = 'simulation_short_read/'+s+'/reads/reads_mapping.tsv.gz'
+  new_name = 'plant_sample'+s.split('_sample')[1]+'.tsv.gz'
+  print(reads, new_name)
+  os.system('mv '+reads+' '+new_name)
+```
+
+Strain move samples and rename:
+```{python, eval=FALSE}
+import os
+
+samples = os.listdir('short_read/')
+samples = [s for s in samples if 'sample_' in s]
+for s in samples:
+  reads = 'short_read/'+s+'/reads/reads_mapping.tsv.gz'
+  new_name = 'strain_sample'+s.split('_sample')[1]+'.tsv.gz'
+  print(reads, new_name)
+  os.system('mv '+reads+' '+new_name)
+```
+
+Mouse move samples and rename:
+```{python, eval=FALSE}
+import os
+
+samples = os.listdir('mouse/')
+samples = [s for s in samples if 'sample_' in s and 'tar' not in s]
+for s in samples:
+  reads = 'mouse/'+s+'/reads/reads_mapping.tsv.gz'
+  new_name = 'mouse/mouse_sample'+s.split('_sample')[1]+'.tsv.gz'
+  print(reads, new_name)
+  os.system('mv '+reads+' '+new_name)
+```
+
+And then these were just all moved to the same folder.
+
+### Get all taxonomy ID's
+
+Go through samples and get the ID's (I don't think this was really necessary for anything! It should just be done when I'm processing the samples):
+```{python, eval=FALSE}
+import os
+import pandas as pd
+import pickle
+
+tax_id = []
+
+files = sorted(os.listdir('truth_samples/'))
+count = 0
+for f in files:
+  #if count > 1: break
+  this_file = pd.read_csv('truth_samples/'+f, index_col=0, header=0, sep='\t')
+  taxid = list(set(list(this_file.loc[:, 'tax_id'].values)))
+  count += 1
+  tax_id = list(set(tax_id+taxid))
+  print(f, len(tax_id))
+
+with open('all_truth_taxid.list', 'wb') as f:
+    pickle.dump(tax_id, f)
+```
+
+Get same NCBI taxonomy as used above:
+```{bash, eval=FALSE}
+wget https://ftp.ncbi.nlm.nih.gov/pub/taxonomy/taxdump_archive/new_taxdump_2021-10-01.zip
+unzip new_taxdump_2021-10-01.zip
+```
+
+Make taxid dictionary and also the merged and deleted taxid's:
+```{python, eval=FALSE}
+import os
+import pickle
+
+taxid_dict = {}
+
+for row in open('taxidlineage.dmp', 'r'):
+  row = row.split('\t')
+  tid = row[0]
+  lineage = row[2].split(' ')
+  taxid_dict[tid] = lineage[:-1]
+
+with open('taxidlineage.dict', 'wb') as f:
+    pickle.dump(taxid_dict, f)
+
+merged = {}
+
+for row in open('merged.dmp', 'r'):
+  row = row.split('\t')
+  merged[row[0]] = row[2]
+
+with open('merged.dict', 'wb') as f:
+    pickle.dump(merged, f)
+    
+deleted = []
+for row in open('delnodes.dmp', 'r'):
+  deleted.append(row.split('\t')[0])
+  
+with open('deleted.list', 'wb') as f:
+    pickle.dump(deleted, f)
+```
+
+Previously I only had the GTDB to NCBI conversion for species level. Now I need this for all levels so I think what we'll do is get all of the species (lowest classification), these can be converted to NCBI and then I can get the lineage for each in GTDB and NCBI and convert between the two that way? I copied the gtdb_to_ncbi dictionary from what I'd made previously.
+```{python, eval=FALSE}
+import pickle
+
+gtdb_all_parent = {}
+gtdb_species_lineage = {}
+gtdb_species_list = []
+gtdb_nodes = '/home/storage/robyn/kraken2_databases/creation/kraken2_GTDBr202_RefSeqV205/taxonomy/nodes.dmp'
+count = 0
+for row in open(gtdb_nodes, 'r'):
+  #count += 1
+  #if count > 100: break
+  row = row.split('\t')
+  gtdb_all_parent[row[0]] = row[2]
+  if row[4] == 'strain': gtdb_species_list.append(row[0])
+
+with open('/home/robyn/simulated_samples/CAMI2/taxonomy/gtdb_to_ncbi_taxid.dict', 'rb') as f:
+    gtdb_to_ncbi = pickle.load(f)
+
+with open('taxonomy/taxidlineage.dict', 'rb') as f:
+    taxidlineage = pickle.load(f)
+    
+with open('taxonomy/merged.dict', 'rb') as f:
+    merged = pickle.load(f)
+    
+with open('taxonomy/deleted.list', 'rb') as f:
+    deleted = pickle.load(f)
+deleted = set(deleted)
+
+ncbi_rank = {}
+for row in open('/home/robyn/simulated_samples/CAMI2/taxonomy/nodes.dmp', 'r'):
+  row = row.split('\t')
+  ncbi_rank[row[0]] = row[4]
+
+for sp in gtdb_species_list:
+  tax = sp[:]
+  this_lineage = []
+  while tax != '1':
+    this_lineage.append(gtdb_all_parent[tax])
+    tax = gtdb_all_parent[tax]
+  gtdb_species_lineage[sp] = this_lineage
+
+all_levels_gtdb_to_ncbi = {}
+rank_index = {'superkingdom':-2, 'kingdom':-3, 'phylum':-4, 'class':-5, 'order':-6, 'family':-7, 'genus':-8, 'species':-9}
+other_ranks = []
+best_ranks = [r for r in rank_index]
+for sp in gtdb_species_lineage:
+  gtdb_lineage = gtdb_species_lineage[sp]
+  ncbi_sp = str(gtdb_to_ncbi[int(sp)])
+  if ncbi_sp in merged:
+    ncbi_sp = merged[ncbi_sp]
+  ncbi_lineage = taxidlineage[ncbi_sp]
+  lineage_rank = []
+  added_lineage = []
+  this_lineage = []
+  for tid in ncbi_lineage:
+    rank = ncbi_rank[tid]
+    lineage_rank.append(rank)
+  all_ranks = True
+  for r in best_ranks:
+    if r not in lineage_rank: all_ranks = False
+  if all_ranks:
+    for tid in ncbi_lineage:
+      if ncbi_rank[tid] in rank_index:
+        gtdb_equivalent = gtdb_lineage[rank_index[ncbi_rank[tid]]]
+        all_levels_gtdb_to_ncbi[gtdb_equivalent] = tid
+      elif tid == '131567':
+        gtdb_equivalent = gtdb_lineage[-1]
+        all_levels_gtdb_to_ncbi[gtdb_equivalent] = tid
+  else:
+    clade = 1
+    for tid in ncbi_lineage:
+      rank = ncbi_rank[tid]
+      if -9 in added_lineage: continue
+      if tid == '131567':
+        gtdb_equivalent = gtdb_lineage[-1]
+        all_levels_gtdb_to_ncbi[gtdb_equivalent] = tid
+        added_lineage.append(-1)
+      elif rank in best_ranks:
+        gtdb_equivalent = gtdb_lineage[rank_index[rank]]
+        all_levels_gtdb_to_ncbi[gtdb_equivalent] = tid
+        added_lineage.append(rank_index[rank])
+      elif rank == 'no rank' or rank == 'clade':
+        ind = ncbi_lineage.index(tid)
+        if len(added_lineage) > 1:
+          if added_lineage[-1] == 'genus' and 'species' not in lineage_rank:
+            gtdb_equivalent = gtdb_lineage[rank_index['species']]
+            all_levels_gtdb_to_ncbi[gtdb_equivalent] = tid
+            added_lineage.append(rank_index['species'])
+          else:
+            if rank != lineage_rank[-1]:
+              if lineage_rank[ind+1] in best_ranks and lineage_rank[ind-1] in best_ranks:
+                rank_diff = best_ranks.index(lineage_rank[ind+1])-best_ranks.index(lineage_rank[ind-1])
+                if rank_diff > 1:
+                  for a in range(rank_diff-1):
+                    gtdb_equivalent = gtdb_lineage[rank_index[lineage_rank[ind-1]]-(a+1)]
+                    all_levels_gtdb_to_ncbi[gtdb_equivalent] = tid
+                    added_lineage.append(rank_index[lineage_rank[ind-1]]-(a+1))
+        else:
+          if len(lineage_rank) >= 3:
+            if lineage_rank[ind-1] == 'superkingdom' and lineage_rank[ind+1] == 'kingdom':
+              continue
+            elif len(lineage_rank) > 5:
+              work_something_out = True
+      elif rank in ['subgenus', 'species subgroup', 'section'] and 'species' not in lineage_rank:
+        gtdb_equivalent = gtdb_lineage[rank_index['species']]
+        all_levels_gtdb_to_ncbi[gtdb_equivalent] = tid
+        added_lineage.append(rank_index['species'])
+      elif rank == 'subfamily' and 'genus' not in lineage_rank:
+        gtdb_equivalent = gtdb_lineage[rank_index['genus']]
+        all_levels_gtdb_to_ncbi[gtdb_equivalent] = tid
+        added_lineage.append(rank_index['genus'])
+      else:
+        if rank not in ['species group', 'forma specialis', 'subspecies', 'strain']:
+          other_ranks.append(rank)
+  all_levels_gtdb_to_ncbi[sp] = ncbi_sp
+  for lev in gtdb_lineage:
+    if lev not in all_levels_gtdb_to_ncbi:
+      #print(lev, gtdb_lineage, ncbi_lineage, lineage_rank, gtdb_lineage.index(lev))
+      if 9-gtdb_lineage.index(lev) >= len(ncbi_lineage):
+        all_levels_gtdb_to_ncbi[lev] = ncbi_lineage[-1]
+      elif lev == gtdb_lineage[0]:
+        all_levels_gtdb_to_ncbi[lev] = ncbi_lineage[-1]
+      elif len(gtdb_lineage) == len(ncbi_lineage):
+        ind = gtdb_lineage.index(lev)+1
+        all_levels_gtdb_to_ncbi[lev] = ncbi_lineage[-ind]
+      else:
+        all_levels_gtdb_to_ncbi[lev] = ncbi_lineage[0] #basically, if I wasn't able to match the taxonomy ID in any of the other ways, then just assign it to the superkingdom
+
+with open('/home/robyn/simulated_samples/CAMI2/taxonomy/gtdb_to_ncbi_taxid_all_levels.dict', 'wb') as f:
+    pickle.dump(all_levels_gtdb_to_ncbi, f)
+```
+
+### Process samples
+
+Here the idea is to run through the raw output of Kraken2 (the classifications for each read, plus the number of minimizers mapped) and see if the taxonomy ID matches with what it should be in the CAMI2 files.
+At the end of this, I want to save a csv of each sample which will have:
+Read name / Real taxid / Real OTU name / Kraken taxid / Confidence of Kraken taxid / Classification index / Note (e.g. kraken classified at lower level)
+Classification index:
+0 = correctly classified
+U = unclassified (can assign this maximum value at the end when plotting)
+1 = kraken classification was correct at 1 rank higher (e.g. strain classification from CAMI was correct at species level in kraken)
+...
+7 = kraken classification was correct at 8 ranks higher (e.g. strain classification from CAMI was correct at domain level in kraken)
+
+First go through the kraken2 outraw files and get what we can from there (the taxid and confidence):
+```{python, eval=FALSE}
+#not used
+import os
+import pickle
+import time
+from multiprocessing import Pool
+from multiprocessing import freeze_support
+from multiprocessing import Process, Manager
+
+with open('taxonomy/taxidlineage.dict', 'rb') as f:
+    taxidlineage = pickle.load(f)
+    
+with open('taxonomy/merged.dict', 'rb') as f:
+    merged = pickle.load(f)
+    
+with open('taxonomy/deleted.list', 'rb') as f:
+    deleted = pickle.load(f)
+deleted = set(deleted)
+
+folder = '/scratch/robyn/kraken2_outraw/RefSeqCompleteV205_500GB/'
+prefix = folder.split('/')[-2]
+save_folder = '/scratch/robyn/summary_outraw/'
+files = sorted(os.listdir(folder))
+
+def write_row(row):
+  with open(save_folder+'temporary_1.kraken', 'a') as f:
+    wr = f.write(row)
+  return
+
+def get_row(row):
+  if row[0] == 'U':
+    write_row(row[1]+'\tU\tNA\n')
+  else:
+    classif = row[2]
+    mini = row[4]
+    tid = classif.split(' ')[-1].replace(')', '')
+    if tid in merged: tid = merged[tid]
+    elif tid in deleted: 
+      write_row(row[1]+'\tU\tDeleted\n')
+      return
+    tid_all_lineage = taxidlineage[tid]+[tid]
+    tid_all_lineage.reverse()
+    mini = mini.split(' ')
+    for m in range(len(mini)):
+      tid_test = mini[m].split(':')[0]
+      if tid_test in merged: mini[m] = mini[m].replace(tid_test, merged[tid_test])
+      elif tid_test in deleted: mini[m] = mini[m].replace(tid_test, '0')
+    all_confidence = ''
+    for taxid in tid_all_lineage:
+      if taxid != tid_all_lineage[0]: break
+      tid_count = 0
+      mini_count = 0
+      for m in mini:
+        if ':' not in m: continue
+        tid_test = m.split(':')[0]
+        c = int(m.split(':')[1].replace('\n', ''))
+        if tid_test != '0' and tid_test != 'A':
+          tid_test_lineage = taxidlineage[tid_test]
+        if tid_test == '0' or tid_test == 'A': 
+          mini_count += c
+        elif tid_test == taxid:
+          tid_count += c
+          mini_count += c
+        elif taxid in tid_test_lineage:
+          tid_count += c
+          mini_count += c
+        else:
+          mini_count += c
+      confidence = tid_count/mini_count
+      all_confidence += taxid+':'+str(round(confidence, 4))+'; '
+    write_row(row[1]+'\t'+tid+'\t'+all_confidence+'\n')
+  return
+
+for f in files:
+  start_time = time.time()
+  if f != 'marine_sample_0.kraken': break
+  #this_file = []
+  print(f)
+  new_fn = save_folder+prefix+'_'+f
+  if os.path.exists(new_fn):
+    print(f+' already exists, please delete if you were wanting to re-run')
+    continue
+  if os.path.exists(save_folder+'temporary_1.kraken'):
+    os.system('rm '+save_folder+'temporary_1.kraken')
+    print('Removed the previous '+save_folder+'temporary_1.kraken folder')
+  # this_file = []
+  # for row in open(folder+f, 'r'):
+  #   row = row.split('\t')
+  #   this_file.append(row)
+  print('Opened file, starting processing')
+  print(time.time() - start_time)
+  getting_file = []
+  count = 0
+  for row in this_file:
+    getting_file.append(row)
+    #if count == 27000: break
+    if count % 1000 == 0 or row == this_file[-1]:
+      print('Getting the next 1000, total now: '+str(count))
+      print(time.time() - start_time)
+      if __name__ == "__main__":
+        manager = Manager()
+        with manager.Pool(processes=12) as pool:
+          pm = pool.map(get_row, getting_file)
+      break
+      getting_file = []
+    count += 1
+  os.system('mv '+save_folder+'/temporary_1.kraken '+new_fn)
+  print(time.time() - start_time)
+            
+```
+Not on scratch, this took 501.8090932369232 for 27001 sequences
+On scratch, this took 412.04569911956787 for the same number
+So this is on average about 4s per 1000 sequences, which is just too slow. 
+
+Just saving the classification for each read and getting the real classification:
+```{python, eval=FALSE}
+import os
+import time
+import pickle
+import numpy as np
+from multiprocessing import Pool
+from multiprocessing import freeze_support
+from multiprocessing import Process, Manager
+
+with open('/home/robyn/simulated_samples/CAMI2/taxonomy/taxidlineage.dict', 'rb') as f:
+    taxidlineage = pickle.load(f)
+    
+with open('/home/robyn/simulated_samples/CAMI2/taxonomy/merged.dict', 'rb') as f:
+    merged = pickle.load(f)
+    
+with open('/home/robyn/simulated_samples/CAMI2/taxonomy/deleted.list', 'rb') as f:
+    deleted = pickle.load(f)
+deleted = set(deleted)
+    
+with open('/home/robyn/simulated_samples/CAMI2/taxonomy/gtdb_to_ncbi_taxid_all_levels.dict', 'rb') as f:
+    all_levels_gtdb_to_ncbi = pickle.load(f)
+
+def get_single_file(f):
+    folder = f.rsplit('/', 1)[0]+'/'
+    f = f.rsplit('/', 1)[1]
+    prefix = folder.split('/')[-2]
+    #try:
+    new_fn = save_folder+prefix+'_'+f
+    if os.path.exists(new_fn):
+      #print(f+' already exists, please delete if you were wanting to re-run')
+      return
+    start_time = time.time()
+    truth_fn = truth_samples+f.replace('.kraken', '.tsv')
+    all_index = []
+    kraken_higher_level = []
+    kraken_wrong_higher = []
+    truth_dict = {}
+    for row in open(truth_fn, 'r'):
+      row = row.split('\t')
+      truth_dict[row[0]] = [row[1], row[2]]
+    #unique_tax = set([])
+    #print(f, time.time()-start_time)
+    this_file = []
+    total = 0
+    count = 0
+    for row in open(folder+f, 'r'):
+      total += 1
+      try:
+        #if total % 10000000 == 0: print(f, total, time.time()-start_time)
+        row = row.split('\t')
+        if len(row) < 3:
+          count += 1
+          continue
+        if row[0] not in ['C', 'U']:
+          count += 1
+          continue
+        if row[1] not in truth_dict:
+          count += 1
+          continue
+        truth = truth_dict[row[1]]
+        truth_tid, truth_otu = truth[1], truth[0]
+        index = None
+        if row[0] == 'U':
+          row = row[1]+'\tU'
+          index = 'U'
+        else:
+          tax = row[2].split('taxid ')[1].replace(')', '')
+          if 'GTDB' in folder:
+            tax = str(all_levels_gtdb_to_ncbi[tax])
+          if tax == truth_tid:
+            index = 0
+          elif tax == '1' or tax == '0':
+            index = 'U'
+          elif truth_tid == '32644':
+            index = 'CAMI U'
+          else:
+            if tax in merged: 
+              tax = merged[tax]
+            elif tax in deleted: 
+              index = 'NA'
+            if truth_tid in merged: 
+              truth_tid = merged[truth_tid]
+            elif truth_tid in deleted: 
+              index = 'NA'
+            if index == None:
+              kraken_lineage = taxidlineage[tax]
+              truth_lineage = taxidlineage[truth_tid]
+              if truth_tid in kraken_lineage:
+                index = str(0)+'\tkcll'
+              else:
+                if tax in truth_lineage:
+                  t_reverse = truth_lineage[:]
+                  t_reverse.reverse()
+                  index = str(t_reverse.index(tax)+1)+'\tkchl' #kraken classified at higher level that was this many levels away
+                  kraken_higher_level.append(index)
+                else:
+                  min_index = 0
+                  for a in range(min(len(kraken_lineage), len(truth_lineage))):
+                    if kraken_lineage[a] == truth_lineage[a]:
+                      min_index = truth_lineage[a]
+                  t_reverse = truth_lineage[:]
+                  t_reverse.reverse()
+                  if min_index != 0:
+                    index = str(t_reverse.index(min_index)+1)+'\tkw' #kraken wrong, classified correctly at higher level which was this many levels away
+                    kraken_wrong_higher.append(index)
+          row = row[1]+'\t'+tax
+        if index == None: 
+          index = 'U'
+        else: index = str(index)
+        this_file.append(row+'\t'+truth[0]+'\t'+truth[1]+'\t'+index+'\n')
+        all_index.append(index)
+      except:
+        count += 1
+    print(f, 'problems with ', count, ' out of ', total, ' reads')
+    with open(new_fn, 'w') as f:
+      wr = f.write('Sequence ID\tKraken taxid\tCAMI OTU\tCAMI taxid\tIndex\tNotes on index\n')
+      for row in this_file:
+        wr = f.write(row)
+    #krak_high_level = [int(f.split('\t')[0]) if '\t' in f else int(f) for f in kraken_higher_level]
+    #krak_wrong_high = [int(f.split('\t')[0]) if '\t' in f else int(f) for f in kraken_wrong_higher]
+    #print(np.mean(krak_high_level), np.median(krak_high_level), np.mean(krak_wrong_high), np.median(krak_wrong_high))
+    #print(f, time.time()-start_time)
+    # except:
+    #   print(f, 'Had a problem')
+    return
+
+folders = ['/home/storage/robyn/kraken_confidence_comparison_all/CAMI2/kraken2_outraw/chocophlan/', '/home/robyn/simulated_samples/CAMI2/kraken2_outraw/RefSeqCompleteV205/', '/home/storage/robyn/kraken_confidence_comparison_all/CAMI2/kraken2_outraw/minikraken/', '/home/storage/robyn/kraken_confidence_comparison_all/CAMI2/kraken2_outraw/RefSeqCompleteV205_100GB/', '/home/storage/robyn/kraken_confidence_comparison_all/CAMI2/kraken2_outraw/RefSeqV208_nt/', '/home/storage/robyn/kraken_confidence_comparison_all/CAMI2/kraken2_outraw/standard/', '/home/robyn/simulated_samples/CAMI2/kraken2_outraw/RefSeqCompleteV205_500GB/','/home/robyn/simulated_samples/CAMI2/kraken2_outraw/GTDBr202RefSeqV205/']
+folders = ['/home/robyn/simulated_samples/CAMI2/redo/kraken2_outraw/RefSeqCompleteV205/']
+save_folder = '/home/robyn/simulated_samples/CAMI2/redo/summary_outraw/'
+truth_samples = '/home/robyn/simulated_samples/CAMI2/truth_samples/'
+
+for fol in folders:
+  #this_folder = '/home/storage/robyn/kraken_confidence_comparison_all/CAMI2/kraken2_outraw/'+fol
+  this_folder = fol
+  files = sorted(os.listdir(this_folder))
+  files = [this_folder+f for f in files]
+  print('\n\n'+this_folder)
+  # for f in files:
+  #   get_single_file(f)
+  if __name__ == "__main__":
+    manager = Manager()
+    with manager.Pool(processes=12) as pool:
+      pm = pool.map(get_single_file, files)
+```
+
+In this output we have: read name, kraken taxid, otu name, real taxid, index and notes:
+- kcll = kraken was correct at the level that CAMI gave, but had classified this to a lower rank.
+- kchl = the kraken classification was correct, but the CAMI classification was at a lower rank.
+- kw = the kraken classification at the taxonomic rank classified was wrong, but this classification did share a higher level with the correct classification.
+- I also changed Kraken classifications that were 0 or 1 (root) to be unclassified and CAMI classifications of 32644 (unidentified) to be unclassified. 
+- Taxonomy ID's that have been merged were switched to the new ID and those that have been deleted were removed. 
+
+The samples that had issues when I first ran this only had issues with ~5-10 reads each (out of >10 million), so I'm just skipping these - they tended to be that the line was not fully written and then there was another read there too so it didn't work well with the script. Not sure what these should be, I could re-run them but it is so few reads.
+
+For the chocophlan samples:
+mouse_sample_10.kraken, strain_sample_90.kraken, mouse_sample_33.kraken, mouse_sample_34.kraken, mouse_sample_52.kraken, strain_sample_61.kraken, strain_sample_26.kraken, plant_sample_7.kraken, marine_sample_9.kraken, mouse_sample_59.kraken, mouse_sample_38.kraken, mouse_sample_30.kraken
+
+RefSeqCompleteV205:
+mouse_sample_24.kraken, mouse_sample_10.kraken, strain_sample_97.kraken, strain_sample_99.kraken, strain_sample_91.kraken, strain_sample_93.kraken, strain_sample_95.kraken
+
+Minikraken:
+strain_sample_84.kraken, mouse_sample_61.kraken, plant_sample_1.kraken, mouse_sample_60.kraken, plant_sample_12.kraken, mouse_sample_26.kraken, mouse_sample_16.kraken, marine_sample_0.fq.kraken
+
+RefSeqCompleteV205_100GB
+strain_sample_85.kraken
+
+Generate a summary of these and combine:
+This will include: mean and median of index, proportion of reads correctly classified, proportion of reads classified at a lower level by kraken, index of reads that were classified wrong by kraken and index of reads that were classified at a higher level by kraken. We'll also add some info on each taxonomy ID and how well it was classified, for now just as a whole. Maybe I can come back to this if it seems interesting.
+```{python, eval=FALSE}
+import os
+import numpy as np
+import pandas as pd
+import time
+from multiprocessing import Pool
+from multiprocessing import freeze_support
+from multiprocessing import Process, Manager
+
+databases = {'chocophlan_':'kraken2_chocophlan-', 'minikraken_':'kraken2_minikraken-', 'standard_':'kraken2_standard_0521-', 'RefSeqCompleteV205_':'kraken2_refseqV205-', 'RefSeqCompleteV205_100GB_':'kraken2_refseqV205_100GB-', 'RefSeqCompleteV205_500GB_':'kraken2_refseqV205_500GB-', 'GTDBr202RefSeqV205_':'kraken2_GTDBr202RefSeqV205-', 'RefSeqV208_nt_':'kraken2_refseqV208_nt-'}
+folder = 'summary_outraw/'
+all_files = os.listdir(folder)
+
+columns = ['Sample', 'Median Index', 'Mean Index', 'Number of reads', 'Number of correctly classified reads', 'Number of reads classified at a lower level by Kraken', 'Number of reads classified at a higher level by Kraken', 'Number of reads classified wrong by Kraken', 'Unclassified reads', 'Median Index of reads classified at a higher level by Kraken', 'Mean Index of reads classified at a higher level by Kraken', 'Median Index of reads classified wrong by Kraken', 'Mean Index of reads classified wrong by Kraken']
+
+def get_file(f):
+  start_time = time.time()
+  print(f)
+  for d in databases:
+    if d in f:
+      if '100GB' in f and '100GB' not in d: continue
+      elif '500GB' in f and '500GB' not in d: continue
+      db = d
+      break
+  new_fn = f.replace(db, databases[db]).replace('.kraken', '')
+  new_fn = new_fn.split('-')
+  new_fn = new_fn[1]+'-'+new_fn[0]
+  if os.path.exists('summary_summary_outraw/'+new_fn+'_pandas.csv'): 
+    print('This file already exists: summary_summary_outraw/'+new_fn+'_pandas.csv')
+    return
+  this_file = pd.read_csv(folder+f, index_col=0, header=0, sep='\t')
+  unclassified = list(this_file.loc[:, 'Index'].values).count('U')
+  this_file[this_file['Index'] == 'U'] = 9
+  this_file[this_file['Index'] == 'CAMI U'] = 0
+  this_file.Index = this_file.Index.fillna(value=9)
+  this_file.Index = this_file.Index.map(int)
+  this_file[this_file['Index'] > 9] = 9
+  this_sample = [new_fn, np.median(list(this_file.loc[:, 'Index'].values)), np.mean(list(this_file.loc[:, 'Index'].values)), this_file.shape[0], list(this_file.loc[:, 'Index'].values).count(0), list(this_file.loc[:, 'Notes on index'].values).count('kcll'), list(this_file.loc[:, 'Notes on index'].values).count('kchl'), list(this_file.loc[:, 'Notes on index'].values).count('kw'), unclassified]
+  this_file_kchl = pd.DataFrame(this_file)[this_file['Notes on index'] == 'kchl']
+  this_sample.append(np.median(list(this_file_kchl.loc[:, 'Index'].values)))
+  this_sample.append(np.mean(list(this_file_kchl.loc[:, 'Index'].values)))
+  this_file_kw = pd.DataFrame(this_file)[this_file['Notes on index'] == 'kw']
+  this_sample.append(np.median(list(this_file_kw.loc[:, 'Index'].values)))
+  this_sample.append(np.mean(list(this_file_kw.loc[:, 'Index'].values)))
+  this_sample_df = pd.DataFrame(this_sample, index=columns).transpose().set_index('Sample')
+  this_sample_df.to_csv('summary_summary_outraw/'+new_fn+'_pandas.csv')
+  print(f, time.time()-start_time)
+  return
+
+if __name__ == "__main__":
+  manager = Manager()
+  with manager.Pool(processes=12) as pool:
+    pm = pool.map(get_file, all_files)
+
+summary_files = os.listdir('summary_summary_outraw/')
+all_files = []
+for f in summary_files:
+  print(f)
+  this_file = pd.read_csv('summary_summary_outraw/'+f, index_col=0, header=0)
+  if isinstance(all_files, list):
+    all_files = pd.DataFrame(this_file)
+  else:
+    all_files = pd.concat([all_files, this_file])
+    all_files = all_files.groupby(by=all_files.index, axis=0).sum().fillna(value=0)
+
+all_files.to_csv('summary_outraw.csv')
+```
+
+### Put together regular truth samples
+
+```{python, eval=FALSE}
+import os
+import pandas as pd
+
+truth_samples = os.listdir('truth_samples/')
+all_samples = []
+for f in truth_samples:
+  #if f not in ['mouse_sample_0.tsv', 'mouse_sample_1.tsv']: continue
+  taxids = []
+  for row in open('truth_samples/'+f, 'r'):
+    if row[0] != '#':
+      taxids.append(row.split('\t')[2])
+  unique_taxids = set(taxids)
+  taxid_count = {}
+  for ut in unique_taxids:
+    taxid_count[ut] = taxids.count(ut)
+  
+  df = pd.DataFrame.from_dict(taxid_count, orient='index', columns=[f.replace('.tsv', '')])
+  if isinstance(all_samples, list):
+    all_samples = pd.DataFrame(df)
+  else:
+    all_samples = pd.concat([all_samples, df])
+    all_samples = all_samples.groupby(by=all_samples.index, axis=0).sum().fillna(value=0)
+```
+
+### Put together regular truth samples from profiles
+
+Move samples:
+```{python, eval=FALSE}
+import os
+
+folders = ['marine/simulation_short_read/', 'mouse/', 'plant/simulation_short_read/', 'strain_madness/short_read/']
+for folder in folders:
+  files = os.listdir(folder)
+  new_name = folder.split('/')[0]
+  for f in files:
+    if 'taxonomic_profile' not in f: continue
+    this_new_name = new_name+'_sample_'+f.replace('taxonomic_profile_', '')
+    mv = os.system('mv '+folder+f+' '+'truth_profiles/'+this_new_name)
+```
+
+Put samples together:
+```{python, eval=FALSE}
+import os
+import pandas as pd
+import pickle
+
+# reads_in_samples = {}
+# files = os.listdir('truth_samples/')
+# for f in files:
+#   print(f)
+#   count = 0
+#   for line in open('truth_samples/'+f): count += 1
+#   reads_in_samples[f.replace('.tsv', '')] = count-1
+# 
+# with open('kraken_confidence_testing_mock/database_classifications/reads_in_samples.dict', 'wb') as f:
+#     pickle.dump(reads_in_samples, f)
+
+with open('kraken_confidence_testing_mock/database_classifications/reads_in_samples.dict', 'rb') as f:
+    reads_in_samples = pickle.load(f)
+
+files = sorted(os.listdir('/home/robyn/simulated_samples/CAMI2/truth_profiles/'))
+all_files = []
+for f in files:
+  print(f)
+  #if f != 'marine_sample_0.txt': break
+  this_file = []
+  sn = f.replace('.txt', '').replace('_madness', '')
+  for row in open('/home/robyn/simulated_samples/CAMI2/truth_profiles/'+f, 'r'):
+    row = row.split('\t')
+    if len(row) > 4:
+      if row[1] == 'species':
+        this_file.append([row[0], row[4]])
+  this_file = pd.DataFrame(this_file, columns=['Taxid', sn]).set_index('Taxid')
+  for row in this_file.index.values:
+    this_file.loc[row, sn] = float(this_file.loc[row, sn])/100
+    if this_file.loc[row, sn] > 0:
+      this_file.loc[row, sn] = int(this_file.loc[row, sn]*reads_in_samples[sn])
+    
+  if isinstance(all_files, list):
+    all_files = pd.DataFrame(this_file)
+  else:
+    all_files = pd.concat([all_files, this_file]).fillna(value=0)
+    all_files = all_files.groupby(by=all_files.index, axis=0).sum()
+
+all_files.to_csv('/home/robyn/simulated_samples/CAMI2/kraken_confidence_testing_mock/database_classifications/truth_profiles_species.csv')
+```
+
+
+## Combine output for all runs
+
+### Kraken combine per sample (RefSeq)
+
+```{python, eval=FALSE}
+#obviously some parts of this need editing depending on whether it's genus or species we're putting together
+import os
+import pandas as pd
+
+direc = '/home/robyn/simulated_samples/CAMI2/'
+folders = ['chocophlan/', 'minikraken/', 'RefSeqCompleteV205/', 'RefSeqCompleteV205_100GB/', 'RefSeqCompleteV205_500GB/', 'RefSeqV208_nt/', 'standard/']
+folders = ['RefSeqCompleteV205_100GB/']
+name = ['kraken2_chocophlan', 'kraken2_minikraken', 'kraken2_refseqV205', 'kraken2_refseqV205_100GB', 'kraken2_refseqV205_500GB', 'kraken2_refseqV208_nt', 'kraken2_standard_0521']
+name = ['kraken2_refseqV205_100GB']
+save_folder = '/home/robyn/simulated_samples/CAMI2/kraken_combined_species/'
+
+samples = os.listdir(direc+'truth_samples/')
+samples = sorted([sample.replace('.tsv', '') for sample in samples])
+
+direc = direc+'kraken2_bracken_species/'
+
+confidence = ['0.00', '0.05', '0.10', '0.15', '0.20', '0.25', '0.30', '0.35', '0.40', '0.45', '0.50', '0.55', '0.60', '0.65', '0.70', '0.75', '0.80', '0.85', '0.90', '0.95', '1.00']
+
+for f in range(len(folders)):
+  print(folders[f])
+  all_output = os.listdir(direc+folders[f])
+  all_output = [out for out in all_output if out.split('.')[-1] == 'bracken']
+  for sample in samples:
+    print(sample)
+    for conf in confidence:
+      #if conf != '0.00': continue
+      sn = sample+'.'+conf+'.bracken'
+      new_sn = sample+'-'+name[f]+'-'+conf
+      if sn not in all_output:
+        this_sample[new_sn] = 0
+        continue
+      this_conf = pd.read_csv(direc+folders[f]+sn, sep='\t', header=0, index_col=1)
+      this_conf = pd.DataFrame(this_conf.loc[:, 'new_est_reads']).rename(columns={'new_est_reads':new_sn})
+      if conf == '0.00':
+        this_sample = this_conf
+      else:
+        this_sample = pd.concat([this_sample, this_conf]).fillna(value=0)
+        this_sample = this_sample.groupby(by=this_sample.index, axis=0).sum()
+    this_sample.to_csv(save_folder+sample+'-'+name[f]+'_species.csv')
+```
+
+### Combine all
+
+```{python, eval=FALSE}
+all_files = os.listdir('kraken_combined_species/')
+
+names = ['kraken2_chocophlan', 'kraken2_minikraken', 'kraken2_refseqV205', 'kraken2_refseqV205_100GB', 'kraken2_refseqV205_500GB', 'kraken2_refseqV208_nt', 'kraken2_standard_0521']
+names = ['kraken2_refseqV205_100GB']
+
+for name in names:
+  df_list = []
+  these_dfs = []
+  count = 0
+  these_files = [f for f in all_files if name in f]
+  if name == 'kraken2_refseqV205':
+    these_files = [f for f in these_files if 'GB' not in f]
+  for f in these_files:
+    df_list.append(pd.read_csv('kraken_combined_species/'+f, index_col=0, header=0))
+    if len(df_list) > 0:
+      print(name, count)
+      combined_df = pd.concat(df_list)
+      combined_df = combined_df.fillna(value=0)
+      combined_df = combined_df.groupby(by=combined_df.index, axis=0).sum()
+      if count%20 == 0:
+        these_dfs.append(combined_df)
+        df_list = []
+      else:
+        df_list = [combined_df]
+    count += 1
+  combined_df = pd.concat(these_dfs+df_list)
+  combined_df = combined_df.fillna(value=0)
+  combined_df = combined_df.groupby(by=combined_df.index, axis=0).sum()
+  combined_df.to_csv(name+'_combined.csv')
+```
+
+### MetaPhlAn
+
+#### Estimated reads
+
+```{python, eval=FALSE}
+#needs editing between genus and species
+files = os.listdir('metaphlan_out/')
+all_samples = []
+for file in files:
+  if file == '.DS_Store': continue
+  profile = pd.read_csv('metaphlan_out/'+file, index_col=0, header=4, sep='\t')
+  rows = []
+  for row in profile.index.values:
+    if 'g__' in row and 's__' not in row:
+      taxid = profile.loc[row, 'clade_taxid']
+      abundance = profile.loc[row, 'estimated_number_of_reads_from_the_clade']
+      taxid = taxid.split('|')[-1]
+      rows.append([taxid, abundance])
+  this_sample = pd.DataFrame(rows, columns=['Taxid', file.replace('.txt', '')+'-MetaPhlAn'])
+  all_samples.append(this_sample.set_index('Taxid'))
+all_samples = pd.concat(all_samples).fillna(value=0)
+all_samples = all_samples.groupby(by=all_samples.index, axis=0).sum()
+all_samples.to_csv('MetaPhlAn_reads_combined_genus.csv')
+```
+
+### GTDB-RefSeq
+
+Combine per sample:
+```{python, eval=FALSE}
+import pandas as pd
+import os
+
+direc = '/home/robyn/simulated_samples/CAMI2/'
+folders = ['GTDBr202RefSeqV205/']
+name = ['kraken2_GTDBr202RefSeqV205']
+save_folder = '/home/robyn/simulated_samples/CAMI2/kraken_combined_genus/'
+
+samples = os.listdir(direc+'truth_samples/')
+samples = sorted([sample.replace('.tsv', '') for sample in samples])
+
+direc = direc+'kraken2_bracken_genus/'
+
+confidence = ['0.00', '0.05', '0.10', '0.15', '0.20', '0.25', '0.30', '0.35', '0.40', '0.45', '0.50', '0.55', '0.60', '0.65', '0.70', '0.75', '0.80', '0.85', '0.90', '0.95', '1.00']
+
+for f in range(len(folders)):
+  print(folders[f])
+  all_output = os.listdir(direc+folders[f])
+  all_output = [out for out in all_output if out.split('.')[-1] == 'bracken']
+  for sample in samples:
+    print(sample)
+    for conf in confidence:
+      #if conf != '0.00': continue
+      sn = sample+'.'+conf+'.genus.bracken'
+      new_sn = sample+'-'+name[f]+'-'+conf
+      if sn not in all_output:
+        this_sample[new_sn] = 0
+        continue
+      this_conf = pd.read_csv(direc+folders[f]+sn, sep='\t', header=0, index_col=1)
+      this_conf = pd.DataFrame(this_conf.loc[:, 'new_est_reads']).rename(columns={'new_est_reads':new_sn})
+      if conf == '0.00':
+        this_sample = this_conf
+      else:
+        this_sample = pd.concat([this_sample, this_conf]).fillna(value=0)
+        this_sample = this_sample.groupby(by=this_sample.index, axis=0).sum()
+    this_sample.to_csv(save_folder+sample+'-'+name[f]+'_genus.csv')
+```
+
+Combine all:
+```{python, eval=FALSE}
+all_files = os.listdir('kraken_combined_genus/')
+all_files = [f for f in all_files if 'kraken2_GTDBr202RefSeqV205' in f]
+
+df_list = []
+count = 0 
+for f in all_files:
+  df_list.append(pd.read_csv('kraken_combined_genus/'+f, index_col=0, header=0))
+  if count == 20:
+    print(f)
+    combined_df = pd.concat(df_list)
+    combined_df = combined_df.fillna(value=0)
+    combined_df = combined_df.groupby(by=combined_df.index, axis=0).sum()
+    df_list = [combined_df]
+    count = 0
+  count += 1
+
+combined_df = pd.concat(df_list)
+combined_df = combined_df.fillna(value=0)
+combined_df = combined_df.groupby(by=combined_df.index, axis=0).sum()
+combined_df.to_csv('kraken2_GTDBr202RefSeqV205_combined_GTDB_taxid_genus.csv')
+```
+
+Convert to NCBI taxid:
+```{python, eval=FALSE}
+import pandas as pd
+import pickle
+
+gtdb_df = pd.read_csv('kraken2_GTDBr202RefSeqV205_combined_GTDB_taxid_genus.csv', header=0, index_col=0)
+
+with open('/home/robyn/simulated_samples/CAMI2/taxonomy/gtdb_to_ncbi_taxid_all_levels.dict', 'rb') as f:
+    all_levels_gtdb_to_ncbi = pickle.load(f)
+
+rename_dict = {}
+for row in gtdb_df.index:
+  rename_dict[row] = all_levels_gtdb_to_ncbi[str(row)]
+
+ncbi_df = gtdb_df.rename(index=rename_dict)
+ncbi_df = ncbi_df.groupby(by=ncbi_df.index, axis=0).sum()
+ncbi_df.to_csv('kraken2_GTDBr202RefSeqV205_combined_genus.csv')
+```
+
+## Rename all of the merged and deleted taxonomy ID's within the files
+
+We'll also get rid of the samples that we decided didn't have enough reads in the truth samples above now.
+
+```{python, eval=FALSE}
+import os
+import pandas as pd
+import pickle
+
+files = ['kraken2_standard_0521_combined_genus.csv', 'kraken2_chocophlan_combined_genus.csv', 'kraken2_minikraken_combined_genus.csv', 'kraken2_GTDBr202RefSeqV205_combined_genus.csv', 'kraken2_refseqV205_100GB_combined_genus.csv', 'kraken2_refseqV208_nt_combined_genus.csv', 'MetaPhlAn_reads_combined_genus.csv', 'kraken2_refseqV205_500GB_combined_genus.csv', 'kraken2_refseqV205_combined_genus.csv', 'truth_profiles_species.csv']
+files = ['kraken2_refseqV205_100GB_combined.csv']
+files = ['truth_profiles_species.csv']
+
+with open('/home/robyn/simulated_samples/CAMI2/taxonomy/merged.dict', 'rb') as f:
+    merged = pickle.load(f)
+    
+with open('/home/robyn/simulated_samples/CAMI2/taxonomy/deleted.list', 'rb') as f:
+    deleted = pickle.load(f)
+deleted = set(deleted)
+
+for db in files:
+  print(db)
+  this_df = pd.read_csv('database_classifications/'+db, index_col=0, header=0).fillna(value=0)
+  dropping = []
+  this_df.index = this_df.index.map(str) #convert taxonomy ID indexes to strings
+  this_df = this_df.rename(index=merged) #rename if they were in the merged file
+  dropping = [rem for rem in deleted if rem in this_df.index.values] #drop those that are in the removing list
+  this_df = this_df.drop(dropping, axis=0) #drop them
+  this_df = this_df.groupby(by=this_df.index, axis=0).sum() #group all remaining indexes
+  this_df.to_csv('database_classifications/'+db.replace('.csv', '_rename.csv').replace('_NCBI_taxid', '')) #save the file
+```
+
+## Get the truth samples at species and genus levels
+
+No longer needed after realising that the CAMI2 classifications by reads aren't the same as the gold standard profiles.
+
+```{python, eval=FALSE}
+import os
+import pandas as pd
+import pickle
+import time
+
+with open('/home/robyn/simulated_samples/CAMI2/taxonomy/merged.dict', 'rb') as f:
+    merged = pickle.load(f)
+    
+with open('/home/robyn/simulated_samples/CAMI2/taxonomy/deleted.list', 'rb') as f:
+    deleted = pickle.load(f)
+deleted = set(deleted)
+
+with open('/home/robyn/simulated_samples/CAMI2/taxonomy/taxidlineage.dict', 'rb') as f:
+    taxidlineage = pickle.load(f)
+
+#get a dictionary that will give which rank each taxid is
+tax_rank = {}
+for row in open('/home/robyn/simulated_samples/CAMI2/taxonomy/nodes.dmp', 'r'):
+  row = row.split('\t')
+  tax_rank[row[0]] = row[4]
+  
+#only need to do this if it wasn't done previously
+# truth = pd.read_csv('database_classifications/truth_samples.csv', index_col=0, header=0)
+# truth.index = truth.index.map(str)
+# 
+# rename_truth = {}
+# dropping = []
+# for row in truth.index:
+#   if row in merged:
+#     rename_truth[row] = merged[row]
+#   if row in deleted:
+#     dropping.append(row)
+#  #luckily dropping is empty so we don't need to worry about that, but now I can rename the merged taxonomy ID's
+# 
+# truth = truth.rename(index=rename_truth)
+# truth = truth.groupby(by=truth.index, axis=0).sum()
+# truth.to_csv('database_classifications/truth_samples_rename.csv')
+
+truth = pd.read_csv('/home/robyn/simulated_samples/CAMI2/kraken_confidence_testing_mock/database_classifications/truth_samples_rename.csv', index_col=0, header=0)
+truth.index = truth.index.map(str)
+
+not_species = {}
+rename_below_species = {}
+for row in truth.index:
+  if tax_rank[row] == 'species': continue
+  lineage = taxidlineage[row]
+  below_species = False
+  for lin in lineage:
+    if tax_rank[lin] == 'species':
+      rename_below_species[row] = lin
+      below_species = True
+  if not below_species:
+    not_species[row] = lineage
+
+truth = truth.rename(index=rename_below_species)
+truth = truth.groupby(by=truth.index, axis=0).sum()
+truth.to_csv('/home/robyn/simulated_samples/CAMI2/kraken_confidence_testing_mock/database_classifications/truth_samples_species_rename.csv')
+
+rename_below_genus = {}
+for row in truth.index:
+  if tax_rank[row] == 'genus': 
+    continue
+  lineage = taxidlineage[row]
+  below_genus = False
+  for lin in lineage:
+    if tax_rank[lin] == 'genus':
+      rename_below_genus[row] = lin
+      below_genus = True
+
+print(len(rename_below_genus))
+truth = truth.rename(index=rename_below_genus)
+truth = truth.groupby(by=truth.index, axis=0).sum()
+truth.to_csv('/home/robyn/simulated_samples/CAMI2/kraken_confidence_testing_mock/database_classifications/truth_samples_genus_rename.csv')
+```
+
+## Get the lists of included taxa for checking the taxa/reads included
+
+Mainly using the lists that were made previously. But here we need to start looking at how many of the taxid's are not at the species level.
+
+```{python, eval=FALSE}
+#this still needs modifying to get the lists
+import os
+import pandas as pd
+import pickle
+import time
+import numpy as np
+
+with open('/home/robyn/simulated_samples/CAMI2/taxonomy/merged.dict', 'rb') as f:
+    merged = pickle.load(f)
+    
+with open('/home/robyn/simulated_samples/CAMI2/taxonomy/deleted.list', 'rb') as f:
+    deleted = pickle.load(f)
+deleted = set(deleted)
+
+with open('/home/robyn/simulated_samples/CAMI2/taxonomy/taxidlineage.dict', 'rb') as f:
+    taxidlineage = pickle.load(f)
+    
+with open('/home/robyn/simulated_samples/CAMI2/taxonomy/gtdb_to_ncbi_taxid_all_levels.dict', 'rb') as f:
+    all_levels_gtdb_to_ncbi = pickle.load(f)
+
+#get a dictionary that will give which rank each taxid is
+tax_rank = {}
+for row in open('/home/robyn/simulated_samples/CAMI2/taxonomy/nodes.dmp', 'r'):
+  row = row.split('\t')
+  tax_rank[row[0]] = row[4]
+
+# truth = pd.read_csv('/home/robyn/simulated_samples/CAMI2/kraken_confidence_testing_mock/database_classifications/truth_samples_rename.csv', index_col=0, header=0)
+# truth.index = truth.index.map(str)
+# 
+# ###genus-level classification
+# below_genus_dict = {}
+# above_genus_dict = {}
+# for row in truth.index:
+#   if tax_rank[row] == 'genus': continue
+#   lineage = taxidlineage[row]
+#   below_genus = False
+#   for lin in lineage:
+#     if tax_rank[lin] == 'genus':
+#       below_genus_dict[row] = lin
+#       below_genus = True
+#   above_genus = False
+#   if not below_genus:
+#     above_genus_dict[row] = lineage
+# 
+# above_genus_set = set([ng for ng in above_genus_dict])
+# truth = truth.rename(index=below_genus_dict)
+# truth_sum = truth.sum(axis=0)
+# truth_not_below_genus = pd.DataFrame(truth).loc[list(above_genus_set), :]
+# truth_not_below_genus_sum = truth_not_below_genus.sum(axis=0)
+# truth_not_below_genus_prop = pd.DataFrame(truth_not_below_genus_sum/truth_sum).rename(columns={0:'Proportion'})
+# truth_not_below_genus_prop.to_csv('/home/robyn/simulated_samples/CAMI2/kraken_confidence_testing_mock/database_classifications/truth_not_below_genus_proportion.csv')
+# 
+# not_species = {}
+# rename_below_species = {}
+# for row in truth.index:
+#   if tax_rank[row] == 'species': continue
+#   lineage = taxidlineage[row]
+#   below_species = False
+#   for lin in lineage:
+#     if tax_rank[lin] == 'species':
+#       rename_below_species[row] = lin
+#       below_species = True
+#   if not below_species:
+#     not_species[row] = lineage
+# #so we have 162 of these 989 taxid's that were at a lower level than species and 177 that are above species. The ones that are below species we'll just rename as the species ID, the ones that are lower we'll have to convert the databases to those higher levels to see if they exist (but I'd assume that they will). I guess first I'll look at those ID's and how many reads they equate to.
+# 
+# not_species_set = set([nsp for nsp in not_species])
+# truth = truth.rename(index=rename_below_species)
+# truth_sum = truth.sum(axis=0)
+# truth_not_below_species = pd.DataFrame(truth).loc[list(not_species_set), :]
+# truth_not_below_species_sum = truth_not_below_species.sum(axis=0)
+# truth_not_below_species_prop = pd.DataFrame(truth_not_below_species_sum/truth_sum).rename(columns={0:'Proportion'})
+# truth_not_below_species_prop.to_csv('/home/robyn/simulated_samples/CAMI2/kraken_confidence_testing_mock/database_classifications/truth_not_below_species_proportion.csv')
+
+truth_species = pd.read_csv('/home/robyn/simulated_samples/CAMI2/kraken_confidence_testing_mock/database_classifications/truth_samples_species_rename.csv', index_col=0, header=0)
+truth_genus = pd.read_csv('/home/robyn/simulated_samples/CAMI2/kraken_confidence_testing_mock/database_classifications/truth_samples_genus_rename.csv', index_col=0, header=0)
+
+#if we want to get the taxa that are covered by the database at genus or species level then we need to rewrite this part
+db_lists = ['kraken2_chocophlanV30-201901_taxid_in_db.txt','kraken2_GTDBr202_RefSeqV205_taxid_in_db.txt','kraken2_RefSeqV208_nt_taxid_in_db.txt','kraken2_standard_taxid_in_db.txt','minikraken2_v2_8GB_201904_UPDATE_taxid_in_db.txt','RefSeqV205_Complete_V2_taxid_in_db.txt']
+db_names = ['kraken2_chocophlan', 'kraken2_GTDBr202RefSeqV205', 'kraken2_refseqV208_nt', 'kraken2_standard_0521', 'kraken2_minikraken', 'kraken2_refseqV205']
+
+genus = True
+truth = truth_genus
+truth.index = truth.index.map(str)
+all_db_taxa, all_db_reads = [], []
+for d in range(len(db_lists)):
+  #if d != 0: continue
+  start_time = time.time()
+  #if d > 0: break
+  print(db_lists[d])
+  all_samples_taxa, all_samples_reads = [], []
+  this_list = []
+  #all_levels = []
+  count = 0
+  for row in open('databases/taxid_in_db/'+db_lists[d], 'r'):
+    count += 1
+    tax = row.replace('\n', '')
+    if 'GTDB' in db_lists[d]:
+      tax = all_levels_gtdb_to_ncbi[tax]
+    #if count % 10000 == 0: print(count, time.time()-start_time)
+    if tax in merged: tax = merged[tax]
+    elif tax in deleted: continue
+    if not genus:
+      this_list.append(tax)
+    else:
+      try:
+        lineage = taxidlineage[tax]
+        for lin in lineage:
+          if tax_rank[lin] == 'genus':
+            this_list.append(lin)
+            species.append(tax)
+            break
+      except:
+        continue
+    # try:
+    #   this_list.append(tax)
+    #   lineage = taxidlineage[tax]
+    #   all_levels = all_levels+lineage
+    # except:
+    #   continue
+  this_list = set(this_list)
+  #all_levels = set(all_levels)
+  print(len(this_list), count)
+  for sample in truth.columns:
+    this_df = pd.DataFrame(truth.loc[:, sample])
+    this_df = this_df[this_df.max(axis=1) > 0]
+    total_reads = this_df.loc[:, sample].sum()
+    this_sample = list(this_df.index.values)
+    one_sample_taxa = [sample]
+    one_sample_reads = [sample]
+    count1 = 0
+    id_in_db = []
+    for tid in this_sample:
+      if tid in this_list:
+        count1 += 1
+        id_in_db.append(tid)
+    proportion = count1/len(this_sample)
+    reads_covered = this_df.loc[id_in_db, sample].sum()
+    prop_reads = reads_covered/total_reads
+    one_sample_taxa.append(proportion)
+    one_sample_reads.append(prop_reads)
+    all_samples_taxa.append(one_sample_taxa)
+    all_samples_reads.append(one_sample_reads)
+  all_samples_taxa = pd.DataFrame(all_samples_taxa, columns=['Sample']+[db_names[d]]).set_index('Sample')
+  all_samples_reads = pd.DataFrame(all_samples_reads, columns=['Sample']+[db_names[d]]).set_index('Sample')
+  all_db_taxa.append(all_samples_taxa)
+  all_db_reads.append(all_samples_reads)
+
+all_db_taxa = pd.concat(all_db_taxa).fillna(value=0)
+all_db_taxa = all_db_taxa.groupby(by=all_db_taxa.index, axis=0).sum()
+all_db_taxa.to_csv('databases/CAMI2_truth_proportion_taxa_covered_genus.csv')
+
+all_db_reads = pd.concat(all_db_reads).fillna(value=0)
+all_db_reads = all_db_reads.groupby(by=all_db_reads.index, axis=0).sum()
+all_db_reads.to_csv('databases/CAMI2_truth_proportion_reads_covered_genus.csv')
+```
+
+Redo after realising that the CAMI2 classifications by reads aren't the same as the gold standard profiles.
+
+```{python, eval=FALSE}
+#this still needs modifying to get the lists
+import os
+import pandas as pd
+import pickle
+import time
+import numpy as np
+
+with open('/home/robyn/simulated_samples/CAMI2/taxonomy/merged.dict', 'rb') as f:
+    merged = pickle.load(f)
+    
+with open('/home/robyn/simulated_samples/CAMI2/taxonomy/deleted.list', 'rb') as f:
+    deleted = pickle.load(f)
+deleted = set(deleted)
+
+# with open('/home/robyn/simulated_samples/CAMI2/taxonomy/taxidlineage.dict', 'rb') as f:
+#     taxidlineage = pickle.load(f)
+    
+with open('/home/robyn/simulated_samples/CAMI2/taxonomy/gtdb_to_ncbi_taxid_all_levels.dict', 'rb') as f:
+    all_levels_gtdb_to_ncbi = pickle.load(f)
+
+truth = pd.read_csv('/home/robyn/simulated_samples/CAMI2/kraken_confidence_testing_mock/database_classifications/truth_profiles_species_rename.csv', index_col=0, header=0)
+truth.index = truth.index.map(str)
+
+#if we want to get the taxa that are covered by the database at genus or species level then we need to rewrite this part
+db_lists = ['kraken2_chocophlanV30-201901_taxid_in_db.txt','kraken2_GTDBr202_RefSeqV205_taxid_in_db.txt','kraken2_RefSeqV208_nt_taxid_in_db.txt','kraken2_standard_taxid_in_db.txt','minikraken2_v2_8GB_201904_UPDATE_taxid_in_db.txt','RefSeqV205_Complete_V2_taxid_in_db.txt']
+db_names = ['kraken2_chocophlan', 'kraken2_GTDBr202RefSeqV205', 'kraken2_refseqV208_nt', 'kraken2_standard_0521', 'kraken2_minikraken', 'kraken2_refseqV205']
+
+all_db_taxa, all_db_reads = [], []
+list_not_included = []
+for d in range(len(db_lists)):
+  #if d != 0: continue
+  start_time = time.time()
+  #if d > 0: break
+  print(db_lists[d])
+  all_samples_taxa, all_samples_reads = [], []
+  this_list = []
+  #all_levels = []
+  count = 0
+  for row in open('/home/robyn/simulated_samples/CAMI2/kraken_confidence_testing_mock/databases/taxid_in_db/'+db_lists[d], 'r'):
+    count += 1
+    tax = row.replace('\n', '')
+    if 'GTDB' in db_lists[d]:
+      tax = all_levels_gtdb_to_ncbi[tax]
+    if tax in merged: tax = merged[tax]
+    elif tax in deleted: continue
+    this_list.append(tax)
+  this_list = set(this_list)
+  print(len(this_list), count)
+  for sample in truth.columns:
+    this_df = pd.DataFrame(truth.loc[:, sample])
+    this_df = this_df[this_df.max(axis=1) > 0]
+    total_reads = this_df.loc[:, sample].sum()
+    this_sample = list(this_df.index.values)
+    one_sample_taxa = [sample]
+    one_sample_reads = [sample]
+    count1 = 0
+    id_in_db = []
+    for tid in this_sample:
+      if tid in this_list:
+        count1 += 1
+        id_in_db.append(tid)
+      else:
+        list_not_included.append(sample+'; '+db_names[d]+'; '+tid)
+    proportion = count1/len(this_sample)
+    reads_covered = this_df.loc[id_in_db, sample].sum()
+    prop_reads = reads_covered/total_reads
+    one_sample_taxa.append(proportion)
+    one_sample_reads.append(prop_reads)
+    all_samples_taxa.append(one_sample_taxa)
+    all_samples_reads.append(one_sample_reads)
+  all_samples_taxa = pd.DataFrame(all_samples_taxa, columns=['Sample']+[db_names[d]]).set_index('Sample')
+  all_samples_reads = pd.DataFrame(all_samples_reads, columns=['Sample']+[db_names[d]]).set_index('Sample')
+  all_db_taxa.append(all_samples_taxa)
+  all_db_reads.append(all_samples_reads)
+
+with open('/home/robyn/simulated_samples/CAMI2/kraken_confidence_testing_mock/databases/CAMI2_not_in_databases_all.txt', 'w') as f:
+  for tax in list_not_included:
+    f.write(tax+'\n')
+
+all_db_taxa = pd.concat(all_db_taxa).fillna(value=0)
+all_db_taxa = all_db_taxa.groupby(by=all_db_taxa.index, axis=0).sum()
+all_db_taxa.to_csv('databases/CAMI2_truth_proportion_taxa_covered_profile.csv')
+
+all_db_reads = pd.concat(all_db_reads).fillna(value=0)
+all_db_reads = all_db_reads.groupby(by=all_db_reads.index, axis=0).sum()
+all_db_reads.to_csv('databases/CAMI2_truth_proportion_reads_covered_profile.csv')
+```
+
+## Calculate all metrics before profile
+
+Unfortunately multiprocessing doesn't work in R so this needs to be set to false if run here (not really recommended because there are thousands of samples to calculate these metrics for). I ran it as a standalone python script.
+
+```{python, eval=FALSE}
+import pandas as pd
+import os
+from skbio.diversity import get_alpha_diversity_metrics, get_beta_diversity_metrics, alpha_diversity, beta_diversity
+from sklearn.metrics import precision_recall_fscore_support
+from skbio import read
+from skbio.tree import TreeNode
+from skbio.stats.composition import clr
+from deicode.preprocessing import rclr
+import numpy as np
+from scipy.spatial import distance
+from sklearn.metrics import auc
+from multiprocessing import Pool
+from multiprocessing import freeze_support
+from multiprocessing import Process, Manager
+
+using_multiprocessing = True
+n_proc=12
+
+direc = '/home/robyn/simulated_samples/CAMI2/kraken_confidence_testing_mock/'
+direc_db = direc+'database_classifications/'
+direc_save = direc+'analysis/calculations/'
+direc_temp = direc+'temporary/'
+db_files = ['kraken2_chocophlan_combined_rename.csv', 'kraken2_GTDBr202RefSeqV205_combined_rename.csv', 'kraken2_minikraken_combined_rename.csv', 'kraken2_refseqV205_100GB_combined_rename.csv', 'kraken2_refseqV205_500GB_combined_rename.csv', 'kraken2_refseqV205_combined_rename.csv', 'kraken2_refseqV208_nt_combined_rename.csv', 'kraken2_standard_0521_combined_rename.csv',  'MetaPhlAn_reads_combined_rename.csv']+['kraken2_chocophlan_combined_genus_rename.csv', 'kraken2_GTDBr202RefSeqV205_combined_genus_rename.csv', 'kraken2_minikraken_combined_genus_rename.csv', 'kraken2_refseqV205_100GB_combined_genus_rename.csv', 'kraken2_refseqV205_500GB_combined_genus_rename.csv', 'kraken2_refseqV205_combined_genus_rename.csv', 'kraken2_refseqV208_nt_combined_genus_rename.csv', 'kraken2_standard_0521_combined_genus_rename.csv',  'MetaPhlAn_reads_combined_genus_rename.csv']
+
+truth_genus = pd.read_csv(direc_db+'truth_samples_genus_rename.csv', index_col=0, header=0)
+truth_genus.index = truth_genus.index.map(str)
+truth_species = pd.read_csv(direc_db+'truth_samples_species_rename.csv', index_col=0, header=0)
+truth_species.index = truth_species.index.map(str)
+samples = list(truth_genus.columns)
+
+metrics = {'Proportion classified':['proportion_classified', 'basic'],
+            'Precision reads':['precision_reads', 'basic'], 
+            'Precision taxa':['precision_taxa', 'basic'], 
+            'Recall reads':['recall_reads', 'basic'], 
+            'Recall taxa':['recall_taxa', 'basic'], 
+            'F1 score reads':['f1_score_reads', 'basic'], 
+            'F1 score taxa':['f1_score_taxa', 'basic'], 
+            'L1 distance':['l1_distance', 'beta', 'cityblock', 'none'],
+            'Aitchisons distance':['aitchisons_distance', 'beta', 'euclidean', 'clr'], 
+            'Robust Aitchisons distance':['robust_aitchisons_distance', 'beta', 'euclidean', 'rclr'],
+            'Bray-Curtis dissimilarity raw':['bray_curtis_dissimilarity_raw', 'beta', 'braycurtis', 'none'],
+            'Bray-Curtis dissimilarity relative abundance':['bray_curtis_dissimilarity_ra', 'beta', 'braycurtis', 'ra'],
+            "Simpson's diversity":['simpsons_diversity', 'alpha', 'simpson'],
+            'Shannon diversity':['shannon_diversity', 'alpha', 'shannon'],
+            'Chao1 richness':['chao1_richness', 'alpha', 'chao1'],
+            "McIntosh's evenness":['mcintosh_evenness', 'alpha', 'mcintosh_e'],
+            "Pielou evenness":['pielou_evenness', 'alpha', 'pielou_e'],
+            "Simpson's evenness":['simpson_evenness', 'alpha', 'simpson_e'],
+            "Number of taxa":['number_of_taxa', 'alpha', 'observed_otus']}
+
+#for each of these metrics, the first value is what to call the file name, the second is the type of measure (basic, alpha, beta), third is the name within the alpha/beta diversity functions, and fourth is the type of normalisation to perform prior to calculations
+#print(get_beta_diversity_metrics())
+#print(get_alpha_diversity_metrics())
+
+def append_text(fn, sn, text):
+    with open(direc_save+fn+'.txt', 'a') as f:
+        f.write(sn+'\t'+str(text)+'\n')
+    return
+
+def new_file(fn, cn1, cn2):
+    with open(direc_save+fn+'.txt', 'w') as f:
+        f.write(cn1+'\t'+cn2+'\n')
+    return
+
+def calc_aupr(sample_df):
+    sn = sample_df.columns[1]
+    pc = sample_df.sum(axis=0).values
+    #if the number of reads classified is zero, set all of the metrics to be zero and return
+    if pc[1] == 0: 
+        prop_classified, precision_taxa, recall_taxa, f1_score_taxa, precision_reads, recall_reads, f1_score_reads = 0, 0, 0, 0, 0, 0, 0
+        return prop_classified, precision_taxa, recall_taxa, f1_score_taxa, precision_reads, recall_reads, f1_score_reads
+    else: prop_classified = pc[1]/pc[0]
+    #otherwise, loop through the taxa in the truth sample and look at whether the classification is accurate - add 1 to correct taxa if it is, if the number of reads classified is higher than the truth sample then only add the number of reads in the truth sample to the total number of correct reads, otherwise add the number of reads predicted to it
+    y_true, y_pred = sample_df.iloc[:, 0].values, sample_df.iloc[:, 1].values
+    correct_reads, correct_taxa = 0, 0
+    for v in range(len(y_true)):
+        if y_true[v] > 0 and y_pred[v] > 0:
+            if y_pred[v] >= y_true[v]:
+                correct_reads += y_true[v]
+            else:
+                correct_reads += y_pred[v]
+            if y_pred[v] > 0 and y_true[v] > 0: 
+                correct_taxa += 1
+    #calculate precision and recall
+    precision_reads = correct_reads/sum(y_pred) #reads correctly classified (true positives) divided by reads correctly classified (true positives) + reads incorrectly classified (false positives), i.e. number of reads classified
+    recall_reads = correct_reads/sum(y_true) #reads correctly classified (true positives) divided by reads correctly classified (true positives) + reads not classified (false negatives), i.e. number of reads in truth sample
+    if precision_reads == 0 or recall_reads == 0: f1_score_reads = 0
+    else: f1_score_reads = 2*((precision_reads*recall_reads)/(precision_reads+recall_reads))
+    
+    precision_taxa = correct_taxa/sum([1 for y in y_pred if y > 0])
+    recall_taxa = correct_taxa/sum([1 for y in y_true if y > 0])
+    if precision_taxa == 0 or recall_taxa == 0: f1_score_taxa = 0
+    else: f1_score_taxa = 2*((precision_taxa*recall_taxa)/(precision_taxa+recall_taxa))
+        
+    return prop_classified, precision_taxa, recall_taxa, f1_score_taxa, precision_reads, recall_reads, f1_score_reads
+
+
+def calc_all(sample_df):
+    sn = list(sample_df.columns)[1]
+    if len(sample_df.index) == 1:
+        for metric in metrics:
+            append_text(sn.split('-')[1]+'_'+metrics[metric][0], sn, 0)
+        return
+    sample_df.to_csv(direc_temp+sn+'.csv')
+    fn = 'calculations/'+sn.split('-')[1]
+    calculated_aupr = False
+    for metric in metrics:
+        sample_df = pd.read_csv(direc_temp+sn+'.csv', index_col=0, header=0)
+        sample_df.index = sample_df.index.map(str)
+        if metrics[metric][1] == 'alpha':
+            if metrics[metric][2] != 'faith_pd':
+                val = list(alpha_diversity(metrics[metric][2], list(sample_df.loc[:, sn].values)))[0]
+            else:
+                val = list(alpha_diversity(metrics[metric][2], list(sample_df.loc[:, sn].values), otu_ids=sample_df.index.values, tree=tree, validate=False))[0]
+        elif metrics[metric][1] == 'beta':
+            if metrics[metric][3] == 'clr':
+                sample_df[sample_df == 0] = 1
+                for col in sample_df.columns:
+                    sample_df.loc[:, col] = clr(sample_df.loc[:, col].values)
+                X = sample_df.transpose().iloc[0:].values
+            elif metrics[metric][3] == 'rclr':
+                X = sample_df.iloc[0:].values
+                rclr_sample = rclr(X)
+                rclr_sample = pd.DataFrame(rclr_sample, columns=sample_df.columns, index=sample_df.index.values).fillna(value=0)
+                X = rclr_sample.transpose().iloc[0:].values
+            elif metrics[metric][3] == 'ra':
+                sample_df = sample_df.divide(sample_df.sum(axis=0), axis=1).multiply(100)
+                X = sample_df.transpose().iloc[0:].values
+            else:
+                X = sample_df.transpose().iloc[0:].values
+                
+            if 'unifrac' not in metric:
+                similarities = np.nan_to_num(distance.cdist(X, X, metrics[metric][2])) 
+            else:
+                sample_df.index = sample_df.index.map(str)
+                similarities = beta_diversity(metrics[metric][2], X, sample_df.columns, tree=tree, otu_ids=sample_df.index.values, validate=False)
+            val = similarities[0][1]
+        else:
+            if not calculated_aupr:
+                prop_classified, precision, recall, f1_score, precision_reads, recall_reads, f1_score_reads = calc_aupr(sample_df)
+                list_vals = [prop_classified, precision, recall, f1_score, precision_reads, recall_reads, f1_score_reads]
+                metric_names = ['Proportion classified', 'Precision taxa', 'Recall taxa', 'F1 score taxa', 'Precision reads', 'Recall reads', 'F1 score reads']
+                for a in range(len(list_vals)):
+                    append_text(sn.split('-')[1]+'_'+metrics[metric_names[a]][0], sn, list_vals[a])
+                calculated_aupr = True
+                continue
+            else:
+                continue
+        append_text(sn.split('-')[1]+'_'+metrics[metric][0], sn, val)
+    os.remove(direc_temp+sn+'.csv')
+    return
+    
+
+for db in db_files:
+    metrics = {"Number of taxa":['number_of_taxa', 'alpha', 'observed_otus']}
+    print('\n\n\n', db, '\n\n\n')
+    genus = False
+    if 'genus' in db: genus = True
+    db_name = db.replace('_combined_genus_rename.csv', '').replace('_combined_rename.csv', '')
+    if genus:
+      if os.path.exists(direc+'analysis/'+db_name+'_calculations_genus.csv'):
+        print('Already got this one')
+        continue
+    elif os.path.exists(direc+'analysis/'+db_name+'_calculations_species.csv'):
+      print('Already got this one')
+      continue
+    for metric in metrics:
+      #if not os.path.exists(direc_save+db_name+'_'+metrics[metric][0]+'.txt'):
+          new_file(db_name+'_'+metrics[metric][0], 'Sample name', metric)
+    db_tests = pd.read_csv(direc_db+db, index_col=0, header=0)
+    db_tests.index = db_tests.index.map(str)
+    all_running = []
+    count_all = 1
+    count_samples = 0
+    for sample in db_tests.columns:
+        count_samples += 1
+        if genus:
+          truth_sample_df = pd.DataFrame(truth_genus.loc[:, sample.split('-')[0]])
+        else:
+          truth_sample_df = pd.DataFrame(truth_species.loc[:, sample.split('-')[0]])
+        truth_sample_df = truth_sample_df[truth_sample_df.max(axis=1) > 0]
+        test_sample_df = pd.DataFrame(db_tests.loc[:,sample])
+        test_sample_df = test_sample_df[test_sample_df.max(axis=1) > 0]
+        sample_df = pd.concat([truth_sample_df, test_sample_df]).fillna(value=0)
+        sample_df = sample_df.groupby(by=sample_df.index, axis=0).sum()
+        all_running.append(sample_df)
+        if len(all_running) == n_proc or count_samples == len(list(db_tests.columns)):
+            print('Getting distances for '+str(n_proc), count_all)
+            count_all += 1
+            if using_multiprocessing:
+                if __name__ == "__main__":
+                    manager = Manager()
+                    with manager.Pool(processes=n_proc) as pool:
+                        pool.map(calc_all, all_running)
+            else:
+                for df in all_running:
+                    calc_all(df)
+            all_running = []
+    all_dfs = []
+    metrics = {'Proportion classified':['proportion_classified', 'basic'],
+            'Precision reads':['precision_reads', 'basic'], 
+            'Precision taxa':['precision_taxa', 'basic'], 
+            'Recall reads':['recall_reads', 'basic'], 
+            'Recall taxa':['recall_taxa', 'basic'], 
+            'F1 score reads':['f1_score_reads', 'basic'], 
+            'F1 score taxa':['f1_score_taxa', 'basic'], 
+            'L1 distance':['l1_distance', 'beta', 'cityblock', 'none'],
+            'Aitchisons distance':['aitchisons_distance', 'beta', 'euclidean', 'clr'], 
+            'Robust Aitchisons distance':['robust_aitchisons_distance', 'beta', 'euclidean', 'rclr'],
+            'Bray-Curtis dissimilarity raw':['bray_curtis_dissimilarity_raw', 'beta', 'braycurtis', 'none'],
+            'Bray-Curtis dissimilarity relative abundance':['bray_curtis_dissimilarity_ra', 'beta', 'braycurtis', 'ra'],
+            "Simpson's diversity":['simpsons_diversity', 'alpha', 'simpson'],
+            'Shannon diversity':['shannon_diversity', 'alpha', 'shannon'],
+            'Chao1 richness':['chao1_richness', 'alpha', 'chao1'],
+            "McIntosh's evenness":['mcintosh_evenness', 'alpha', 'mcintosh_e'],
+            "Pielou evenness":['pielou_evenness', 'alpha', 'pielou_e'],
+            "Simpson's evenness":['simpson_evenness', 'alpha', 'simpson_e'],
+            "Number of taxa":['number_of_taxa', 'alpha', 'observed_otus']}
+    for metric in metrics:
+        try:
+          this_metric = pd.read_csv(direc_save+db_name+'_'+metrics[metric][0]+'.txt', index_col=0, header=0, sep='\t')
+        except:
+          if genus:
+            this_metric = pd.read_csv(direc_save+db_name+'_'+metrics[metric][0]+'_genus.txt', index_col=0, header=0, sep='\t')
+          else:
+            this_metric = pd.read_csv(direc_save+db_name+'_'+metrics[metric][0]+'_species.txt', index_col=0, header=0, sep='\t')
+        all_dfs.append(this_metric)
+    calculations = pd.concat(all_dfs).fillna(value=0)
+    calculations = calculations.groupby(by=calculations.index, axis=0).sum()
+    calculations['Mean F1 score'] = calculations.loc[:, ['F1 score taxa', 'F1 score reads']].mean(axis=1)
+    if genus:
+      calculations.to_csv(direc+'analysis/'+db_name+'_calculations_genus.csv')
+    else:
+      calculations.to_csv(direc+'analysis/'+db_name+'_calculations_species.csv')
+    for metric in metrics:
+      if genus:
+        os.system('mv '+direc_save+db_name+'_'+metrics[metric][0]+'.txt '+direc_save+db_name+'_'+metrics[metric][0]+'_genus.txt')
+      else:
+        os.system('mv '+direc_save+db_name+'_'+metrics[metric][0]+'.txt '+direc_save+db_name+'_'+metrics[metric][0]+'_species.txt')
+```
+
+Calculate alpha diversity of truth samples:
+```{python, eval=FALSE}
+from skbio.diversity import get_alpha_diversity_metrics, get_beta_diversity_metrics, alpha_diversity, beta_diversity
+import pandas as pd
+
+direc = '/home/robyn/simulated_samples/CAMI2/kraken_confidence_testing_mock/'
+direc_db = direc+'database_classifications/'
+truth = pd.read_csv(direc_db+'truth_samples_species_rename.csv', index_col=0, header=0)
+truth.index = truth.index.map(str)
+
+metrics = {"Simpson's diversity":['simpsons_diversity', 'alpha', 'simpson'],
+            'Shannon diversity':['shannon_diversity', 'alpha', 'shannon'],
+            'Chao1 richness':['chao1_richness', 'alpha', 'chao1'],
+            "McIntosh's evenness":['mcintosh_evenness', 'alpha', 'mcintosh_e'],
+            "Pielou evenness":['pielou_evenness', 'alpha', 'pielou_e'],
+            "Simpson's evenness":['simpson_evenness', 'alpha', 'simpson_e'],
+            "Number of taxa":['observed_otus', 'alpha', 'observed_otus']}
+
+all_calculations = []
+for sample in truth.columns:
+    calculations = []
+    for metric in metrics:
+      val = list(alpha_diversity(metrics[metric][2], list(truth.loc[:, sample].values)))[0]
+      calculations.append(val)
+    all_calculations.append(calculations)
+
+calcs = pd.DataFrame(all_calculations, columns=[metric for metric in metrics], index=truth.columns).fillna(value=0)
+calcs.to_csv(direc+'analysis/truth_species_calculations.csv')
+```
+
+## Calculate all metrics with truth profiles
+
+Unfortunately multiprocessing doesn't work in R so this needs to be set to false if run here (not really recommended because there are thousands of samples to calculate these metrics for). I ran it as a standalone python script.
+
+```{python, eval=FALSE}
+import pandas as pd
+import os
+from skbio.diversity import get_alpha_diversity_metrics, get_beta_diversity_metrics, alpha_diversity, beta_diversity
+from sklearn.metrics import precision_recall_fscore_support
+from skbio import read
+from skbio.tree import TreeNode
+from skbio.stats.composition import clr
+from deicode.preprocessing import rclr
+import numpy as np
+from scipy.spatial import distance
+from sklearn.metrics import auc
+from multiprocessing import Pool
+from multiprocessing import freeze_support
+from multiprocessing import Process, Manager
+import pickle
+
+using_multiprocessing = True
+n_proc=12
+
+direc = '/home/robyn/simulated_samples/CAMI2/kraken_confidence_testing_mock/'
+direc_db = direc+'database_classifications/'
+direc_save = direc+'analysis/calculations/'
+direc_temp = direc+'temporary/'
+db_files = ['kraken2_refseqV205_combined_rename.csv', 'kraken2_refseqV205_100GB_combined_rename.csv', 'kraken2_refseqV205_500GB_combined_rename.csv', 'kraken2_chocophlan_combined_rename.csv', 'kraken2_GTDBr202RefSeqV205_combined_rename.csv', 'kraken2_minikraken_combined_rename.csv', 'kraken2_refseqV208_nt_combined_rename.csv', 'kraken2_standard_0521_combined_rename.csv',  'MetaPhlAn_reads_combined_rename.csv']
+db_files = ['kraken2_refseqV205_100GB_combined_rename.csv']
+#db_files = ['MetaPhlAn_reads_combined_rename.csv']
+
+truth = pd.read_csv(direc_db+'truth_profiles_species_rename.csv', index_col=0, header=0)
+#fix that everything was multiplied by 100
+# truth = truth/100
+# truth = truth.astype(int)
+# truth.to_csv(direc_db+'truth_samples_species_rename.csv')
+truth.index = truth.index.map(str)
+samples = list(truth.columns)
+
+with open(direc_db+'reads_in_samples.dict', 'rb') as f:
+    reads_in_samples = pickle.load(f)
+
+metrics = {'Proportion classified':['proportion_classified', 'basic'],
+            'Precision reads':['precision_reads', 'basic'], 
+            'Precision taxa':['precision_taxa', 'basic'], 
+            'Recall reads':['recall_reads', 'basic'], 
+            'Recall taxa':['recall_taxa', 'basic'], 
+            'F1 score reads':['f1_score_reads', 'basic'], 
+            'F1 score taxa':['f1_score_taxa', 'basic'], 
+            'L1 distance':['l1_distance', 'beta', 'cityblock', 'none'],
+            'Aitchisons distance':['aitchisons_distance', 'beta', 'euclidean', 'clr'], 
+            'Robust Aitchisons distance':['robust_aitchisons_distance', 'beta', 'euclidean', 'rclr'],
+            'Bray-Curtis dissimilarity raw':['bray_curtis_dissimilarity_raw', 'beta', 'braycurtis', 'none'],
+            'Bray-Curtis dissimilarity relative abundance':['bray_curtis_dissimilarity_ra', 'beta', 'braycurtis', 'ra'],
+            "Simpson's diversity":['simpsons_diversity', 'alpha', 'simpson'],
+            'Shannon diversity':['shannon_diversity', 'alpha', 'shannon'],
+            'Chao1 richness':['chao1_richness', 'alpha', 'chao1'],
+            "McIntosh's evenness":['mcintosh_evenness', 'alpha', 'mcintosh_e'],
+            "Pielou evenness":['pielou_evenness', 'alpha', 'pielou_e'],
+            "Simpson's evenness":['simpson_evenness', 'alpha', 'simpson_e'],
+            "Number of taxa":['number_of_taxa', 'alpha', 'observed_otus']}
+
+#for each of these metrics, the first value is what to call the file name, the second is the type of measure (basic, alpha, beta), third is the name within the alpha/beta diversity functions, and fourth is the type of normalisation to perform prior to calculations
+#print(get_beta_diversity_metrics())
+#print(get_alpha_diversity_metrics())
+
+def append_text(fn, sn, text):
+    with open(direc_save+fn+'.txt', 'a') as f:
+        f.write(sn+'\t'+str(text)+'\n')
+    return
+
+def new_file(fn, cn1, cn2):
+    with open(direc_save+fn+'.txt', 'w') as f:
+        f.write(cn1+'\t'+cn2+'\n')
+    return
+
+def calc_aupr(sample_df):
+    sn = sample_df.columns[1]
+    pc = sample_df.sum(axis=0).values
+    #if the number of reads classified is zero, set all of the metrics to be zero and return
+    if pc[1] == 0: 
+        prop_classified, precision_taxa, recall_taxa, f1_score_taxa, precision_reads, recall_reads, f1_score_reads = 0, 0, 0, 0, 0, 0, 0
+        return prop_classified, precision_taxa, recall_taxa, f1_score_taxa, precision_reads, recall_reads, f1_score_reads
+    else: prop_classified = pc[1]/pc[0]
+    #otherwise, loop through the taxa in the truth sample and look at whether the classification is accurate - add 1 to correct taxa if it is, if the number of reads classified is higher than the truth sample then only add the number of reads in the truth sample to the total number of correct reads, otherwise add the number of reads predicted to it
+    y_true, y_pred = sample_df.iloc[:, 0].values, sample_df.iloc[:, 1].values
+    correct_reads, correct_taxa = 0, 0
+    for v in range(len(y_true)):
+        if y_true[v] > 0 and y_pred[v] > 0:
+            if y_pred[v] >= y_true[v]:
+                correct_reads += y_true[v]
+            else:
+                correct_reads += y_pred[v]
+            if y_pred[v] > 0 and y_true[v] > 0: 
+                correct_taxa += 1
+    #calculate precision and recall
+    precision_reads = correct_reads/sum(y_pred) #reads correctly classified (true positives) divided by reads correctly classified (true positives) + reads incorrectly classified (false positives), i.e. number of reads classified
+    recall_reads = correct_reads/sum(y_true) #reads correctly classified (true positives) divided by reads correctly classified (true positives) + reads not classified (false negatives), i.e. number of reads in truth sample
+    if precision_reads == 0 or recall_reads == 0: f1_score_reads = 0
+    else: f1_score_reads = 2*((precision_reads*recall_reads)/(precision_reads+recall_reads))
+    
+    precision_taxa = correct_taxa/sum([1 for y in y_pred if y > 0])
+    recall_taxa = correct_taxa/sum([1 for y in y_true if y > 0])
+    if precision_taxa == 0 or recall_taxa == 0: f1_score_taxa = 0
+    else: f1_score_taxa = 2*((precision_taxa*recall_taxa)/(precision_taxa+recall_taxa))
+        
+    return prop_classified, precision_taxa, recall_taxa, f1_score_taxa, precision_reads, recall_reads, f1_score_reads
+
+
+def calc_all(sample_df):
+    sn = list(sample_df.columns)[1]
+    if len(sample_df.index) == 1:
+        for metric in metrics:
+            append_text(sn.split('-')[1]+'_'+metrics[metric][0], sn, 0)
+        return
+    sample_df.to_csv(direc_temp+sn+'.csv')
+    fn = 'calculations/'+sn.split('-')[1]
+    calculated_aupr = False
+    for metric in metrics:
+        sample_df = pd.read_csv(direc_temp+sn+'.csv', index_col=0, header=0)
+        sample_df.index = sample_df.index.map(str)
+        if metrics[metric][1] == 'alpha':
+            if metrics[metric][2] != 'faith_pd':
+                val = list(alpha_diversity(metrics[metric][2], list(sample_df.loc[:, sn].values)))[0]
+            else:
+                val = list(alpha_diversity(metrics[metric][2], list(sample_df.loc[:, sn].values), otu_ids=sample_df.index.values, tree=tree, validate=False))[0]
+        elif metrics[metric][1] == 'beta':
+            if metrics[metric][3] == 'clr':
+                sample_df[sample_df == 0] = 1
+                for col in sample_df.columns:
+                    sample_df.loc[:, col] = clr(sample_df.loc[:, col].values)
+                X = sample_df.transpose().iloc[0:].values
+            elif metrics[metric][3] == 'rclr':
+                X = sample_df.iloc[0:].values
+                rclr_sample = rclr(X)
+                rclr_sample = pd.DataFrame(rclr_sample, columns=sample_df.columns, index=sample_df.index.values).fillna(value=0)
+                X = rclr_sample.transpose().iloc[0:].values
+            elif metrics[metric][3] == 'ra':
+                sample_df = sample_df.divide(sample_df.sum(axis=0), axis=1).multiply(100)
+                X = sample_df.transpose().iloc[0:].values
+            else:
+                X = sample_df.transpose().iloc[0:].values
+                
+            if 'unifrac' not in metric:
+                similarities = np.nan_to_num(distance.cdist(X, X, metrics[metric][2])) 
+            else:
+                sample_df.index = sample_df.index.map(str)
+                similarities = beta_diversity(metrics[metric][2], X, sample_df.columns, tree=tree, otu_ids=sample_df.index.values, validate=False)
+            val = similarities[0][1]
+        else:
+            if not calculated_aupr:
+                prop_classified, precision, recall, f1_score, precision_reads, recall_reads, f1_score_reads = calc_aupr(sample_df)
+                list_vals = [prop_classified, precision, recall, f1_score, precision_reads, recall_reads, f1_score_reads]
+                metric_names = ['Proportion classified', 'Precision taxa', 'Recall taxa', 'F1 score taxa', 'Precision reads', 'Recall reads', 'F1 score reads']
+                for a in range(len(list_vals)):
+                    append_text(sn.split('-')[1]+'_'+metrics[metric_names[a]][0], sn, list_vals[a])
+                calculated_aupr = True
+                continue
+            else:
+                continue
+        append_text(sn.split('-')[1]+'_'+metrics[metric][0], sn, val)
+    os.remove(direc_temp+sn+'.csv')
+    return
+    
+
+for db in db_files:
+    print('\n\n\n', db, '\n\n\n')
+    db_name = db.replace('_combined_rename.csv', '').replace('_reads', '')
+    if os.path.exists(direc+'analysis/'+db_name+'_calculations.csv'):
+      print('Already got this one')
+      continue
+    for metric in metrics:
+      new_file(db_name+'_'+metrics[metric][0], 'Sample name', metric)
+    db_tests = pd.read_csv(direc_db+db, index_col=0, header=0)
+    db_tests.index = db_tests.index.map(str)
+    all_running = []
+    count_all = 1
+    count_samples = 0
+    for sample in db_tests.columns:
+        count_samples += 1
+        truth_sample_df = pd.DataFrame(truth.loc[:, sample.split('-')[0]])
+        truth_sample_df = truth_sample_df[truth_sample_df.max(axis=1) > 0]
+        test_sample_df = pd.DataFrame(db_tests.loc[:,sample])
+        test_sample_df = test_sample_df[test_sample_df.max(axis=1) > 0]
+        sample_df = pd.concat([truth_sample_df, test_sample_df]).fillna(value=0)
+        sample_df = sample_df.groupby(by=sample_df.index, axis=0).sum()
+        all_running.append(sample_df)
+        if len(all_running) == n_proc or count_samples == len(list(db_tests.columns)):
+            print('Getting distances for '+str(n_proc), count_all)
+            count_all += 1
+            if using_multiprocessing:
+                if __name__ == "__main__":
+                    manager = Manager()
+                    with manager.Pool(processes=n_proc) as pool:
+                        pool.map(calc_all, all_running)
+            else:
+                for df in all_running:
+                    calc_all(df)
+            all_running = []
+    for metric in ['Proportion classified']:
+      new_file(db_name+'_'+metrics[metric][0], 'Sample name', metric)
+    db_tests = pd.read_csv(direc_db+db, index_col=0, header=0)
+    db_tests.index = db_tests.index.map(str)
+    for sample in db_tests.columns:
+      sample_sum = pd.DataFrame(db_tests.loc[:, sample]).sum(axis=0).values[0]
+      sample_prop = sample_sum/reads_in_samples[sample.split('-')[0]]
+      append_text(sample.split('-')[1]+'_'+metrics['Proportion classified'][0], sample, sample_prop)
+    all_dfs = []
+    for metric in metrics:
+        this_metric = pd.read_csv(direc_save+db_name+'_'+metrics[metric][0]+'.txt', index_col=0, header=0, sep='\t')
+        all_dfs.append(this_metric)
+    calculations = pd.concat(all_dfs).fillna(value=0)
+    calculations = calculations.groupby(by=calculations.index, axis=0).sum()
+    calculations['Mean F1 score'] = calculations.loc[:, ['F1 score taxa', 'F1 score reads']].mean(axis=1)
+    calculations['Mean Precision'] = calculations.loc[:, ['Precision taxa', 'Precision reads']].mean(axis=1)
+    calculations['Mean Recall'] = calculations.loc[:, ['Recall taxa', 'Recall reads']].mean(axis=1)
+    calculations.to_csv(direc+'analysis/'+db_name+'_calculations.csv')
+    
+# #redo proportion classified with numbers of reads in samples, not in truth samples
+# for db in db_files:
+#     print('\n\n\n', db, '\n\n\n')
+#     db_name = db.replace('_combined_rename.csv', '').replace('_reads', '')
+#     print(db_name)
+#     for metric in ['Proportion classified']:
+#       new_file(db_name+'_'+metrics[metric][0], 'Sample name', metric)
+#     db_tests = pd.read_csv(direc_db+db, index_col=0, header=0)
+#     db_tests.index = db_tests.index.map(str)
+#     for sample in db_tests.columns:
+#       sample_sum = pd.DataFrame(db_tests.loc[:, sample]).sum(axis=0).values[0]
+#       sample_prop = sample_sum/reads_in_samples[sample.split('-')[0]]
+#       append_text(sample.split('-')[1]+'_'+metrics['Proportion classified'][0], sample, sample_prop)
+#     all_dfs = []
+#     for metric in metrics:
+#         this_metric = pd.read_csv(direc_save+db_name+'_'+metrics[metric][0]+'.txt', index_col=0, header=0, sep='\t')
+#         all_dfs.append(this_metric)
+#     calculations = pd.concat(all_dfs).fillna(value=0)
+#     calculations = calculations.groupby(by=calculations.index, axis=0).sum()
+#     calculations['Mean F1 score'] = calculations.loc[:, ['F1 score taxa', 'F1 score reads']].mean(axis=1)
+#     calculations.to_csv(direc+'analysis/'+db_name+'_calculations_prop_class.csv')
+```
+
+Calculate alpha diversity of truth samples:
+```{python, eval=FALSE}
+from skbio.diversity import get_alpha_diversity_metrics, get_beta_diversity_metrics, alpha_diversity, beta_diversity
+import pandas as pd
+
+direc = '/home/robyn/simulated_samples/CAMI2/kraken_confidence_testing_mock/'
+direc_db = direc+'database_classifications/'
+truth = pd.read_csv(direc_db+'truth_profiles_species_rename.csv', index_col=0, header=0)
+truth.index = truth.index.map(str)
+
+metrics = {"Simpson's diversity":['simpsons_diversity', 'alpha', 'simpson'],
+            'Shannon diversity':['shannon_diversity', 'alpha', 'shannon'],
+            'Chao1 richness':['chao1_richness', 'alpha', 'chao1'],
+            "McIntosh's evenness":['mcintosh_evenness', 'alpha', 'mcintosh_e'],
+            "Pielou evenness":['pielou_evenness', 'alpha', 'pielou_e'],
+            "Simpson's evenness":['simpson_evenness', 'alpha', 'simpson_e'],
+            "Number of taxa":['observed_otus', 'alpha', 'observed_otus']}
+
+all_calculations = []
+for sample in truth.columns:
+    calculations = []
+    for metric in metrics:
+      val = list(alpha_diversity(metrics[metric][2], list(truth.loc[:, sample].values)))[0]
+      calculations.append(val)
+    all_calculations.append(calculations)
+
+calcs = pd.DataFrame(all_calculations, columns=[metric for metric in metrics], index=truth.columns).fillna(value=0)
+calcs.to_csv(direc+'analysis/truth_profile_calculations.csv')
+```
+
+## Kraken RefSeq Complete V205 index runs
+
+```{bash, eval=FALSE}
+#done
+sudo cp -a /home/shared/Kraken2_RefSeqCompleteV205/ /scratch/ramdisk/
+mkdir index
+mkdir index/kraken2_outraw
+mkdir index/kraken2_kreport
+
+parallel -j 2 --progress 'kraken2 --use-names --threads 24 --db {3} --memory-mapping {1} --output index/kraken2_outraw/{1/.}.{2}.kraken --report index/kraken2_kreport/{1/.}.{2}.kreport --confidence {2}' ::: all_samples/marine* ::: 0.05 0.10 0.15 0.20 0.25 0.30 0.35 0.40 0.45 0.50 0.55 0.60 0.65 0.70 0.75 0.80 0.85 0.90 0.95 1.00 ::: /scratch/ramdisk/Kraken2_RefSeqCompleteV205/
+
+
+
+
+parallel -j 2 --progress 'kraken2 --use-names --threads 24 --db {3} --memory-mapping {1} --output index/kraken2_outraw/{1/.}.{2}.kraken --report index/kraken2_kreport/{1/.}.{2}.kreport --confidence {2}' ::: all_samples/plant* ::: 0.05 0.10 0.15 0.20 0.25 0.30 0.35 0.40 0.45 0.50 0.55 0.60 0.65 0.70 0.75 0.80 0.85 0.90 0.95 1.00 ::: /scratch/ramdisk/Kraken2_RefSeqCompleteV205/
+
+
+
+
+parallel -j 2 --progress 'kraken2 --use-names --threads 24 --db {3} --memory-mapping {1} --output index/kraken2_outraw/{1/.}.{2}.kraken --report index/kraken2_kreport/{1/.}.{2}.kreport --confidence {2}' ::: all_samples/strain* ::: 0.05 0.10 0.15 0.20 0.25 0.30 0.35 0.40 0.45 0.50 0.55 0.60 0.65 0.70 0.75 0.80 0.85 0.90 0.95 1.00 ::: /scratch/ramdisk/Kraken2_RefSeqCompleteV205/
+
+parallel -j 2 --progress 'kraken2 --use-names --threads 24 --db {3} --memory-mapping {1} --output index/kraken2_outraw/{1/.}.{2}.kraken --report index/kraken2_kreport/{1/.}.{2}.kreport --confidence {2}' ::: all_samples/mouse* ::: 0.05 0.10 0.15 0.20 0.25 0.30 0.35 0.40 0.45 0.50 0.55 0.60 0.65 0.70 0.75 0.80 0.85 0.90 0.95 1.00 ::: /scratch/ramdisk/Kraken2_RefSeqCompleteV205/
+
+gzip kraken2_outraw/strain_sample_10*
+gzip kraken2_outraw/strain_sample_3*
+gzip kraken2_outraw/strain_sample_4*
+```
+
+Get the summary:
+```{python, eval=FALSE}
+import os
+import time
+import pickle
+import numpy as np
+import pandas as pd
+from multiprocessing import Pool
+from multiprocessing import freeze_support
+from multiprocessing import Process, Manager
+
+with open('/home/robyn/simulated_samples/CAMI2/taxonomy/taxidlineage.dict', 'rb') as f:
+    taxidlineage = pickle.load(f)
+    
+with open('/home/robyn/simulated_samples/CAMI2/taxonomy/merged.dict', 'rb') as f:
+    merged = pickle.load(f)
+    
+with open('/home/robyn/simulated_samples/CAMI2/taxonomy/deleted.list', 'rb') as f:
+    deleted = pickle.load(f)
+deleted = set(deleted)
+    
+with open('/home/robyn/simulated_samples/CAMI2/taxonomy/gtdb_to_ncbi_taxid_all_levels.dict', 'rb') as f:
+    all_levels_gtdb_to_ncbi = pickle.load(f)
+    
+columns = ['Sample', 'Median Index', 'Mean Index', 'Number of reads', 'Number of correctly classified reads', 'Number of reads classified at a lower level by Kraken', 'Number of reads classified at a higher level by Kraken', 'Number of reads classified wrong by Kraken', 'Unclassified reads', 'Median Index of reads classified at a higher level by Kraken', 'Mean Index of reads classified at a higher level by Kraken', 'Median Index of reads classified wrong by Kraken', 'Mean Index of reads classified wrong by Kraken']
+    
+def get_file(f):
+  f = f.split('/')[-1]
+  print(f)
+  new_fn = f.replace('.kraken', '')
+  if os.path.exists('summary_summary_outraw/'+new_fn.replace('.gz', '')+'.csv'): 
+    print('This file already exists: summary_summary_outraw/'+new_fn.replace('.gz', '')+'.csv')
+    return
+  if '.gz' in f:
+    os.system('gunzip '+folder+f)
+    f = f.replace('.gz', '')
+    print('unzipped '+f)
+  this_file = pd.read_csv('summary_outraw/'+f, index_col=0, header=0, sep='\t')
+  unclassified = list(this_file.loc[:, 'Index'].values).count('U')
+  this_file[this_file['Index'] == 'U'] = 9
+  this_file[this_file['Index'] == 'CAMI U'] = 0
+  this_file.Index = this_file.Index.fillna(value=9)
+  this_file.Index = this_file.Index.map(int)
+  this_file[this_file['Index'] > 9] = 9
+  this_sample = [new_fn, np.median(list(this_file.loc[:, 'Index'].values)), np.mean(list(this_file.loc[:, 'Index'].values)), this_file.shape[0], list(this_file.loc[:, 'Index'].values).count(0), list(this_file.loc[:, 'Notes on index'].values).count('kcll'), list(this_file.loc[:, 'Notes on index'].values).count('kchl'), list(this_file.loc[:, 'Notes on index'].values).count('kw'), unclassified]
+  this_file_kchl = pd.DataFrame(this_file)[this_file['Notes on index'] == 'kchl']
+  this_sample.append(np.median(list(this_file_kchl.loc[:, 'Index'].values)))
+  this_sample.append(np.mean(list(this_file_kchl.loc[:, 'Index'].values)))
+  this_file_kw = pd.DataFrame(this_file)[this_file['Notes on index'] == 'kw']
+  this_sample.append(np.median(list(this_file_kw.loc[:, 'Index'].values)))
+  this_sample.append(np.mean(list(this_file_kw.loc[:, 'Index'].values)))
+  this_sample_df = pd.DataFrame(this_sample, index=columns).transpose().set_index('Sample')
+  this_sample_df.to_csv('summary_summary_outraw/'+new_fn+'.csv')
+  os.system('gzip summary_outraw/'+f)
+  return
+    
+def get_single_file(f):
+    start_time = time.time()
+    try:
+      folder = f.rsplit('/', 1)[0]+'/'
+      f = f.rsplit('/', 1)[1]
+      prefix = folder.split('/')[-2]
+      new_fn = save_folder+prefix+'_'+f.replace('.gz', '')
+      if os.path.exists(new_fn) or os.path.exists(new_fn+'.gz'):
+        os.system('gzip '+folder+f)
+        get_file(new_fn)
+        print(f, time.time()-start_time)
+        return
+      if '.gz' in f:
+        os.system('gunzip '+folder+f)
+        f = f.replace('.gz', '')
+      truth_fn = truth_samples+f.replace('.kraken.gz', '')
+      truth_fn = truth_fn.split('.')[0]+'.tsv'
+      all_index = []
+      kraken_higher_level = []
+      kraken_wrong_higher = []
+      truth_dict = {}
+      for row in open(truth_fn, 'r'):
+        row = row.split('\t')
+        truth_dict[row[0]] = [row[1], row[2]]
+      #unique_tax = set([])
+      #print(f, time.time()-start_time)
+      this_file = []
+      total = 0
+      count = 0
+      for row in open(folder+f, 'r'):
+        total += 1
+        try:
+          if total % 10000000 == 0: print(f, total, time.time()-start_time)
+          row = row.split('\t')
+          if len(row) < 3:
+            count += 1
+            continue
+          if row[0] not in ['C', 'U']:
+            count += 1
+            continue
+          if row[1] not in truth_dict:
+            count += 1
+            continue
+          truth = truth_dict[row[1]]
+          truth_tid, truth_otu = truth[1], truth[0]
+          index = None
+          if row[0] == 'U':
+            row = row[1]+'\tU'
+            index = 'U'
+          else:
+            tax = row[2].split('taxid ')[1].replace(')', '')
+            if 'GTDB' in folder:
+              tax = str(all_levels_gtdb_to_ncbi[tax])
+            if tax == truth_tid:
+              index = 0
+            elif tax == '1' or tax == '0':
+              index = 'U'
+            elif truth_tid == '32644':
+              index = 'CAMI U'
+            else:
+              if tax in merged: 
+                tax = merged[tax]
+              elif tax in deleted: 
+                index = 'NA'
+              if truth_tid in merged: 
+                truth_tid = merged[truth_tid]
+              elif truth_tid in deleted: 
+                index = 'NA'
+              if index == None:
+                kraken_lineage = taxidlineage[tax]
+                truth_lineage = taxidlineage[truth_tid]
+                if truth_tid in kraken_lineage:
+                  index = str(0)+'\tkcll'
+                else:
+                  if tax in truth_lineage:
+                    t_reverse = truth_lineage[:]
+                    t_reverse.reverse()
+                    index = str(t_reverse.index(tax)+1)+'\tkchl' #kraken classified at higher level that was this many levels away
+                    kraken_higher_level.append(index)
+                  else:
+                    min_index = 0
+                    for a in range(min(len(kraken_lineage), len(truth_lineage))):
+                      if kraken_lineage[a] == truth_lineage[a]:
+                        min_index = truth_lineage[a]
+                    t_reverse = truth_lineage[:]
+                    t_reverse.reverse()
+                    if min_index != 0:
+                      index = str(t_reverse.index(min_index)+1)+'\tkw' #kraken wrong, classified correctly at higher level which was this many levels away
+                      kraken_wrong_higher.append(index)
+            row = row[1]+'\t'+tax
+          if index == None: 
+            index = 'U'
+          else: index = str(index)
+          this_file.append(row+'\t'+truth[0]+'\t'+truth[1]+'\t'+index+'\n')
+          all_index.append(index)
+        except:
+          count += 1
+      with open(new_fn, 'w') as fi:
+        wr = fi.write('Sequence ID\tKraken taxid\tCAMI OTU\tCAMI taxid\tIndex\tNotes on index\n')
+        for row in this_file:
+          wr = fi.write(row)
+      if '.gz' not in f:
+        os.system('gzip '+folder+f)
+      get_file(new_fn)
+    except:
+      print('Had a problem with '+f)
+    print(f, time.time()-start_time)
+    return
+
+folders = ['/home/robyn/simulated_samples/CAMI2/index/kraken2_outraw/']
+save_folder = '/home/robyn/simulated_samples/CAMI2/index/summary_outraw/'
+truth_samples = '/home/robyn/simulated_samples/CAMI2/truth_samples/'
+
+for fol in folders:
+  #this_folder = '/home/storage/robyn/kraken_confidence_comparison_all/CAMI2/kraken2_outraw/'+fol
+  this_folder = fol
+  files = sorted(os.listdir(this_folder))
+  files = [f for f in files]
+  files = [this_folder+f for f in files if '.gz' not in f]
+  print('\n\n'+this_folder)
+  # for f in files:
+  #   get_single_file(f)
+  if __name__ == "__main__":
+    manager = Manager()
+    with manager.Pool(processes=24) as pool:
+      pm = pool.map(get_single_file, files)
+```
+
+
+Get summary of summaries:
+```{python, eval=FALSE}
+import os
+import numpy as np
+import pandas as pd
+import time
+from multiprocessing import Pool
+from multiprocessing import freeze_support
+from multiprocessing import Process, Manager
+
+folder = 'summary_outraw/'
+all_files = os.listdir(folder)
+all_files = [f for f in all_files if 'marine' in f]
+
+columns = ['Sample', 'Median Index', 'Mean Index', 'Number of reads', 'Number of correctly classified reads', 'Number of reads classified at a lower level by Kraken', 'Number of reads classified at a higher level by Kraken', 'Number of reads classified wrong by Kraken', 'Unclassified reads', 'Median Index of reads classified at a higher level by Kraken', 'Mean Index of reads classified at a higher level by Kraken', 'Median Index of reads classified wrong by Kraken', 'Mean Index of reads classified wrong by Kraken']
+
+def get_file(f):
+  start_time = time.time()
+  f = f.split('/')[-1]
+  print(f)
+  new_fn = f.replace('.kraken', '').replace('.gz', '')
+  if os.path.exists('summary_summary_outraw_no_unclassified/'+new_fn.replace('.gz', '')+'.csv'): 
+    print('This file already exists: summary_summary_outraw_no_unclassified/'+new_fn.replace('.gz', '')+'.csv')
+    return
+  if '.gz' in f:
+    os.system('gunzip '+folder+f)
+    f = f.replace('.gz', '')
+    print('unzipped '+f)
+  this_file = pd.read_csv('summary_outraw/'+f, index_col=0, header=0, sep='\t')
+  unclassified = list(this_file.loc[:, 'Index'].values).count('U')
+  #this_file[this_file['Index'] == 'U'] = 9
+  this_file = this_file.drop(this_file[this_file['Index'] == 'U'].index)
+  this_file[this_file['Index'] == 'CAMI U'] = 0
+  this_file.Index = this_file.Index.fillna(value=9)
+  this_file.Index = this_file.Index.map(int)
+  this_file[this_file['Index'] > 9] = 9
+  this_sample = [new_fn, np.median(list(this_file.loc[:, 'Index'].values)), np.mean(list(this_file.loc[:, 'Index'].values)), this_file.shape[0], list(this_file.loc[:, 'Index'].values).count(0), list(this_file.loc[:, 'Notes on index'].values).count('kcll'), list(this_file.loc[:, 'Notes on index'].values).count('kchl'), list(this_file.loc[:, 'Notes on index'].values).count('kw'), unclassified]
+  this_file_kchl = pd.DataFrame(this_file)[this_file['Notes on index'] == 'kchl']
+  this_sample.append(np.median(list(this_file_kchl.loc[:, 'Index'].values)))
+  this_sample.append(np.mean(list(this_file_kchl.loc[:, 'Index'].values)))
+  this_file_kw = pd.DataFrame(this_file)[this_file['Notes on index'] == 'kw']
+  this_sample.append(np.median(list(this_file_kw.loc[:, 'Index'].values)))
+  this_sample.append(np.mean(list(this_file_kw.loc[:, 'Index'].values)))
+  this_sample_df = pd.DataFrame(this_sample, index=columns).transpose().set_index('Sample')
+  this_sample_df.to_csv('summary_summary_outraw_no_unclassified/'+new_fn+'.csv')
+  os.system('gzip summary_outraw/'+f)
+  print(f, time.time()-start_time)
+  return
+
+if __name__ == "__main__":
+  manager = Manager()
+  with manager.Pool(processes=24) as pool:
+    pm = pool.map(get_file, all_files)
+
+# for f in all_files:
+#   get_file(f)
+```
+
+Also get the 0.00 confidence from those run previously:
+```{python, eval=FALSE}
+import os
+
+redo_folder = 'redo/summary_summary_outraw/'
+files = os.listdir(redo_folder)
+files = [f for f in files if 'refseqV205' in f and 'GB' not in f]
+for f in files:
+  new_fn = f.split('-')[0]+'-0.00.csv'
+  os.system('cp '+redo_folder+f+' index/summary_summary_outraw/'+new_fn)
+```
+
+Rename:
+```{python, eval=FALSE}
+import os
+
+folder = 'summary_summary_outraw/'
+files = os.listdir(folder)
+files = [f for f in files if 'kraken2_outraw' in f]
+for f in files:
+  new_fn = f.replace('kraken2_outraw_', '').replace('.csv', '').split('.', 1)
+  new_fn = new_fn[0]+'-'+new_fn[1]+'.csv'
+  os.system('cp '+folder+f+' '+folder+new_fn)
+```
+
+And combine all:
+```{python, eval=FALSE}
+import os
+import pandas as pd
+
+summary_files = os.listdir('summary_summary_outraw_no_unclassified/')
+summary_files = [f for f in summary_files]
+all_files = []
+for f in summary_files:
+  print(f)
+  this_file = pd.read_csv('summary_summary_outraw_no_unclassified/'+f, index_col=0, header=0)
+  if isinstance(all_files, list):
+    all_files = pd.DataFrame(this_file)
+  else:
+    all_files = pd.concat([all_files, this_file])
+    all_files = all_files.groupby(by=all_files.index, axis=0).sum().fillna(value=0)
+
+rename = {}
+for row in all_files.index.values:
+  new_name = str(row)
+  if 'kraken2_outraw' in row:
+    rename[row] = new_name.replace('kraken2_outraw_', '').replace('.', '-', 1)
+  elif 'kraken2_refseqV205' in row:
+    rename[row] = new_name.replace('kraken2_refseqV205', '0.00')
+  elif 'RefSeqCompleteV205' in row:
+    rename[row] = new_name.replace('RefSeqCompleteV205_', '')+'-0.00'
+    
+all_files = all_files.rename(index=rename)
+
+all_files.to_csv('summary_outraw_confidence_no_unclassified.csv')
+```
+
+
+
+
+
+
+
+
+
+
+
+## Run Kraken and output confidence
+
+### Edit the src/classify.cc file
+
+I think I should just fork the github repo and do it this way - so I've edited the classify.cc script
+```{bash, eval=FALSE}
+conda create --name kraken2-confidence-github
+conda activate kraken2-confidence-github
+mkdir tools/kraken2-confidence-github
+./install_kraken2.sh /home/robyn/tools/kraken2-confidence-github/
+```
+The easiest thing looked like just printing the taxid, score and number of minimizers for each read processed, so I'll just save the output to a file.
+
+### Test with MiniKraken V2
+
+```{bash, eval=FALSE}
+#might be issues with because there was some error often about children
+#done
+sudo cp -a /home/storage/robyn/kraken2_databases/minikraken2_v2_8GB_201904_UPDATE/ /scratch/ramdisk/
+mkdir testing_confidence/
+mkdir testing_confidence/all_samples/
+cp all_samples/marine_sample_0.fq testing_confidence/all_samples/
+cd all_samples/
+mkdir kraken2_kreport
+mkdir kraken2_outraw
+mkdir kraken2_kreport/minikraken/
+mkdir kraken2_outraw/minikraken/
+
+/home/robyn/tools/kraken2-confidence-github/kraken2 --use-names --threads 6 --db /scratch/ramdisk/minikraken2_v2_8GB_201904_UPDATE/ --memory-mapping all_samples/marine_sample_0.fq --output kraken2_outraw/minikraken/marine_sample_0.kraken --report kraken2_kreport/minikraken/marine_sample_0.0.00.kreport --confidence 0.00 > test_marine_sample_0.txt
+```
+
+This does give the scores output (I've added the taxonomy ID as well as the confidence score and total number of minimizers), but the issue is that it appears to be in a different order to how the sequences appear in the file, and if I print the sequence ID then this also doesn't seem to correspond to the correct taxonomy ID or minimizer counts.
+
+
+Ideas:
+- Run through and match each read with the correct classification - calculate the confidence of that classification and we can compare the confidence of true vs false classifications, or look at how far away the real classification is.
+- Use the Otus for the binning project? The best binning would group all reads that originate from the same genome, so knowing the number of genomes that there should be will allow easy assessment of any of these methods.
+- Look at proportion of each taxid that are correctly classified within samples (datasets?)
+

@@ -38,6 +38,9 @@ direc_save = direc+'analysis/'
 direc_validation = direc+'picrust_validation/'
 temp = direc+'temporary/'
 samples = list(pd.read_csv(direc_db+'truth_rename_reads.csv', index_col=0, header=0).columns)
+print(len(samples))
+samples = [s for s in samples if 'S00' not in s]
+print(len(samples))
 
 dbs = ['kraken2_minikraken', 'kraken2_standard_0521', 'kraken2_chocophlan', 'kraken2_refseqV208_nt', 'kraken2_GTDBr202RefSeqV205', 'kraken2_refseqV205']
 size_limited_dbs = ['kraken2_refseqV205_100GB', 'kraken2_refseqV205_500GB']
@@ -59,9 +62,9 @@ limits_metaphlan = {"Proportion classified":[-0.01, 1.01], "Simpson's diversity"
 
 limits_all = {"Proportion classified":[-0.01, 1.01], "Simpson's diversity":[-0.05, 0.3], "Shannon diversity":[0, 10], "Faith's phylogenetic diversity":[0, 55000], "Chao1 richness":[0, 45000], "McIntosh's evenness":[0.2, 1], "Pielou evenness":[-0.1, 0.6], "Simpson's evenness": [0.6, 1.05], "L1 distance":[-100, 20000000], "Robust Aitchisons distance":[-2, 100], "Bray-Curtis dissimilarity relative abundance":[-0.05, 1.05], "Weighted unifrac distance relative abundance":[-10, 300], "Unweighted unifrac distance relative abundance":[-0.05, 1.05], "Aitchisons distance":[-10, 250], "Bray-Curtis dissimilarity raw":[-0.05, 1.05], "Weighted unifrac distance raw":[-10, 175], "Unweighted unifrac distance raw":[-0.05, 1.05]}
 
-locations = {"Simpson's diversity":'lower left', "Shannon diversity":'lower left', "Faith's phylogenetic diversity":'upper right', "Chao1 richness":'upper right', "McIntosh's evenness":'upper left', "Pielou evenness":'lower right', "Simpson's evenness":'lower right', "L1 distance":'upper left', "Robust Aitchisons distance":'upper left', "Bray-Curtis dissimilarity relative abundance":'upper left', "Weighted unifrac distance relative abundance":'upper left', "Unweighted unifrac distance relative abundance":'upper left', "Aitchisons distance":'upper right', "Bray-Curtis dissimilarity raw":'upper left', "Weighted unifrac distance raw":'upper left', "Unweighted unifrac distance raw":'upper right', "Proportion classified":'lower left', "Precision taxa":'upper left', "Recall taxa":'lower left', "F1 score taxa":'lower right', "Precision reads":'lower center', "Recall reads":'lower center', "F1 score reads":'lower center', "Mean F1 score":'lower center', "Mean Precision":'lower right', "Mean Recall":'lower left', "Number of taxa":'upper right'}
+locations = {"Simpson's diversity":'lower left', "Shannon diversity":'lower left', "Faith's phylogenetic diversity":'upper right', "Chao1 richness":'upper right', "McIntosh's evenness":'upper left', "Pielou evenness":'lower right', "Simpson's evenness":'lower right', "L1 distance":'upper left', "Robust Aitchisons distance":'upper left', "Bray-Curtis dissimilarity relative abundance":'upper left', "Weighted unifrac distance relative abundance":'upper left', "Unweighted unifrac distance relative abundance":'upper left', "Aitchisons distance":'upper right', "Bray-Curtis dissimilarity raw":'upper left', "Weighted unifrac distance raw":'upper left', "Unweighted unifrac distance raw":'upper right', "Proportion classified":'lower left', "Precision taxa":'upper left', "Recall taxa":'lower left', "F1 score taxa":'lower right', "Precision reads":'lower center', "Recall reads":'lower center', "F1 score reads":'lower center', "Mean F1 score":'lower center', "Mean Precision":'lower right', "Mean Recall":'lower left', "Number of taxa":'lower left'}
 
-y_labels = {"Proportion classified":'Proportion', "Precision taxa":'Proportion', "Recall taxa":'Proportion', "F1 score taxa":'F1 score', "Precision reads":'Proportion', "Recall reads":'Proportion', "F1 score reads":'F1 score', "Mean Precision":"Proportion", "Mean Recall":"Proportion", "Mean F1 score":'F1 score', "Number of taxa":'Number of taxa', "Simpson's diversity":'Difference between classification\nand known composition', "Shannon diversity":'Difference between classification\nand known composition', "Faith's phylogenetic diversity":'Difference between classification\nand known composition', "Chao1 richness":'Difference between classification\nand known composition', "McIntosh's evenness":'Difference between classification\nand known composition', "Pielou evenness":'Difference between classification\nand known composition', "Simpson's evenness":'Difference between classification\nand known composition', "L1 distance":'Distance between classification\nand known composition', "Robust Aitchisons distance":'Distance between classification\nand known composition', "Bray-Curtis dissimilarity relative abundance":'Dissimilarity between classification\nand known composition', "Weighted unifrac distance relative abundance":'Distance between classification\nand known composition', "Unweighted unifrac distance relative abundance":'Distance between classification\nand known composition', "Aitchisons distance":'Distance between classification\nand known composition', "Bray-Curtis dissimilarity raw":'Dissimilarity between classification\nand known composition', "Weighted unifrac distance raw":'Distance between classification\nand known composition', "Unweighted unifrac distance raw":'Distance between classification\nand known composition'}
+y_labels = {"Proportion classified":'Proportion', "Precision taxa":'Proportion', "Recall taxa":'Proportion', "F1 score taxa":'F1 score', "Precision reads":'Proportion', "Recall reads":'Proportion', "F1 score reads":'F1 score', "Mean Precision":"Proportion", "Mean Recall":"Proportion", "Mean F1 score":'F1 score', "Number of taxa":'Difference between classification\nand known composition', "Simpson's diversity":'Difference between classification\nand known composition', "Shannon diversity":'Difference between classification\nand known composition', "Faith's phylogenetic diversity":'Difference between classification\nand known composition', "Chao1 richness":'Difference between classification\nand known composition', "McIntosh's evenness":'Difference between classification\nand known composition', "Pielou evenness":'Difference between classification\nand known composition', "Simpson's evenness":'Difference between classification\nand known composition', "L1 distance":'Distance between classification\nand known composition', "Robust Aitchisons distance":'Distance between classification\nand known composition', "Bray-Curtis dissimilarity relative abundance":'Dissimilarity between classification\nand known composition', "Weighted unifrac distance relative abundance":'Distance between classification\nand known composition', "Unweighted unifrac distance relative abundance":'Distance between classification\nand known composition', "Aitchisons distance":'Distance between classification\nand known composition', "Bray-Curtis dissimilarity raw":'Dissimilarity between classification\nand known composition', "Weighted unifrac distance raw":'Distance between classification\nand known composition', "Unweighted unifrac distance raw":'Distance between classification\nand known composition'}
 
 rename_settings = {'default':'Default relative abundance\nx number of reads', 'estimated_reads':'Default estimated reads\n(tavg_g/very-sensitive)', 'estimated_reads':'very-sensitive\n(Default estimated reads)', 'very_sensitive_local':'very-sensitive-local', 'sensitive':'sensitive', 'sensitive_local':'sensitive-local', 'avg_g':'avg_g: clade global avergae', 'avg_l':'avg_l: average of length-\nnormalized marker counts', 'estimated_reads':'tavg_g: truncated clade global average\n(Default estimated reads)', 'tavg_l':'tavg_l: truncated average of length-\nnormalized marker counts', 'wavg_g':'wavg_g: winsorized clade global average', 'wavg_l':'wavg_l: winsorized average of length-\nnormalized marker counts', 'med':'med: median of length-normalized\nmarker counts', 'estimated_reads':'Estimated reads (tavg_g)', 'humann_bowtie2':'HUMAnN 3 Bowtie2\nnucleotide alignment', 'humann_diamond':'HUMAnN 3 Diamond\ntranslated alignment'}
 
@@ -92,7 +95,8 @@ Figure S1:
 ```{python, results='hide', fig.keep='all', eval=FALSE}
 tools = ['Kraken2', 'Kraken', 'CLARK', 'MetaPalette', 'DUDes', 'FOCUS', 'MetaPhlAn 3', 'MetaPhlAn2', 'MetaPhlAn', 'MetaPhyler', 'mOTU', 'Quikr', 'Ark', 'Sek', 'Taxy-Pro', 'TIPP', 'Centrifuge', 'CLARK-S', 'KrakenUniq', 'MegaBLAST', 'metaOthello','PathSeq', 'Prophyle', 'taxMaps']
 publication_years = [2019, 2014, 2015, 2016, 2016, 2014, 2021, 2015, 2012, 2011, 2013, 2013, 2015, 2014, 2013, 2014, 2016, 2016, 2018, 2008, 2018, 2011, 2017, 2018]
-citations = [807, 2737, 447, 35, 36, 92, 54, 1258, 1394, 222, 392, 54, 9, 17, 39, 70, 637, 76, 125, 987, 33, 269, 1, 20]
+citations = [1043, 2920, 474, 42, 36, 96, 117, 1361, 1471, 229, 404, 56, 9, 17, 40, 73, 710, 83, 144, 1046, 34, 281 ,2, 21]
+#updated March 2nd 2022
 
 plt.figure(figsize=(8,5))
 ax1 = plt.subplot(111)
@@ -108,7 +112,7 @@ for t in new_order:
   else: fc='#A93226'
   color, color2 = '#1F618D', '#85C1E9'
   ax1.bar(xplot-0.225, citations[t], color=color, width=0.4)
-  years_since_publication = (2021-float(publication_years[t]))
+  years_since_publication = (2022-float(publication_years[t]))
   if years_since_publication == 0: years_since_publication = 1
   ax2.bar(xplot+0.225, float(citations[t])/years_since_publication, color=color2, width=0.4)
   ax1.text(xplot, -80, tools[t]+' ('+str(publication_years[t])+')', color=fc, rotation=90, ha='center', va='top')
@@ -339,20 +343,24 @@ for d in range(len(this_dbs)):
     print(this_dbs[d])
     ha='center'
     if this_dbs[d] == 'kraken2_refseqV205': ha='right'
-    covered = list(truth_taxa.loc[:, this_dbs[d]].values)
-    med_cov, min_cov, max_cov = np.median(covered), min(covered), max(covered)
+    covered = list(truth_taxa.loc[samples, this_dbs[d]].values)
+    med_cov, min_cov, max_cov, mean_cov = np.median(covered), min(covered), max(covered), np.mean(covered)
     ax1.scatter(covered, np.random.normal(d, scale=0.075, size=len(covered)), color=colors_db[this_dbs[d]], s=10, alpha=0.2)
+    ax1.scatter(mean_cov, d, color='k', marker='*', s=10)
     box = ax1.boxplot(covered, positions=[d], showfliers=False, widths=0.5, vert=False)
+    print('Taxa', mean_cov, med_cov, min_cov, max_cov)
     plt.sca(ax1)
     for item in ['boxes', 'whiskers', 'fliers', 'medians', 'caps']: plt.setp(box[item], color='k')
-    plt.text(med_cov, d-0.3, str(round(med_cov, 3)), ha=ha, va='top', fontsize=8) #+' ('+str(round(min_cov, 3))+'-'+str(round(max_cov, 3))+')'
-    covered = list(truth_reads.loc[:, this_dbs[d]].values)
-    med_cov, min_cov, max_cov = np.median(covered), min(covered), max(covered)
+    plt.text(med_cov, d-0.3, str(round(med_cov, 3))+'/'+str(round(mean_cov, 3)), ha=ha, va='top', fontsize=8) #+' ('+str(round(min_cov, 3))+'-'+str(round(max_cov, 3))+')'
+    covered = list(truth_reads.loc[samples, this_dbs[d]].values)
+    med_cov, min_cov, max_cov, mean_cov = np.median(covered), min(covered), max(covered), np.mean(covered)
     ax2.scatter(covered, np.random.normal(d, scale=0.075, size=len(covered)), color=colors_db[this_dbs[d]], s=10, alpha=0.2)
+    ax2.scatter(mean_cov, d, color='k', marker='*', s=10)
     box = ax2.boxplot(covered, positions=[d], showfliers=False, widths=0.5, vert=False)
+    print('Reads', mean_cov, med_cov, min_cov, max_cov)
     plt.sca(ax2)
     for item in ['boxes', 'whiskers', 'fliers', 'medians', 'caps']: plt.setp(box[item], color='k')
-    plt.text(med_cov, d-0.3, str(round(med_cov, 3)), ha=ha, va='top', fontsize=8)
+    plt.text(med_cov, d-0.3, str(round(med_cov, 3))+'/'+str(round(mean_cov, 3)), ha=ha, va='top', fontsize=8)
 
 plt.sca(ax1)
 plt.yticks([d for d in range(len(this_dbs))], db_names, fontweight='bold')
@@ -401,14 +409,14 @@ for a in range(3):
     if a in [0, 1,2,3]: c += 1
   
 axes[0].text(0, 1.2, 'A     Precision, recall and F1 score', fontweight='bold', ha='left', va='center', fontsize=16, transform=axes[0].transAxes)
-axes[3].text(0, 1.2, 'B     Reads or taxa classified and alpha diversity', fontweight='bold', ha='left', va='center', fontsize=16, transform=axes[3].transAxes)
-axes[7].text(0, 1.2, 'C     Beta diversity', fontweight='bold', ha='left', va='center', fontsize=16, transform=axes[7].transAxes)
+axes[3].text(0, 1.2, 'B     Reads or taxa classified and alpha-diversity', fontweight='bold', ha='left', va='center', fontsize=16, transform=axes[3].transAxes)
+axes[7].text(0, 1.2, 'C     Beta-diversity', fontweight='bold', ha='left', va='center', fontsize=16, transform=axes[7].transAxes)
 
 for m in range(len(all_metrics_together_reduced)):
     metric = all_metrics_together_reduced[m]
     ax = axes[m]
     plt.sca(ax)
-    ax.set_title(metric.replace('Proportion classified', 'Proportion of reads classified').replace('relative abundance', '\nrelative abundance').replace('raw', '\nraw').replace('phylogenetic', 'taxonomic').replace('unifrac distance', 'unifrac taxonomic distance').replace('Number of taxa', 'Number of species identified'), fontweight='bold')
+    ax.set_title(metric.replace('Proportion classified', 'Proportion of reads classified').replace('relative abundance', '\nrelative abundance').replace('raw', '\nraw').replace('phylogenetic', 'taxonomic').replace('unifrac distance', 'unifrac taxonomic distance').replace('Number of taxa', 'Dissimilarity in number of\nspecies identified').replace('Shannon diversity', 'Dissimilarity in Shannon\ndiversity'), fontweight='bold')
     all_samples = [[] for conf in confidence]
     for sample in samples:
         this_sample, this_conf = [], []
@@ -419,7 +427,7 @@ for m in range(len(all_metrics_together_reduced)):
                 if this_val == 0:
                     this_val = max(this_db.loc[:, metric].values)
             if metric in alpha_div:
-                if metric not in ['Proportion classified', 'Number of taxa']:
+                if metric not in ['Proportion classified']:
                     this_val = this_val-truth_calcs.loc[sample, metric]
             this_sample.append(this_val)
             all_samples[c].append(this_val)
@@ -440,8 +448,7 @@ for m in range(len(all_metrics_together_reduced)):
     elif metric in prec_rec_f1: plt.ylim([-0.05, 1.05])
     plt.ylabel(y_labels[metric])
     if m == 4: 
-        plt.ylim([10, 10000])
-        plt.semilogy()
+        plt.yscale('symlog')
         continue
     if metric in prec_rec_f1 or metric == 'Proportion classified':
         max_value = max([abs(val) for val in overall])
@@ -453,7 +460,7 @@ for m in range(len(all_metrics_together_reduced)):
         min_index = [abs(val) for val in overall].index(min_value)
         min_value = overall[min_index]
         string = 'Minimum = '+str(round(min_value, 3))+'\nat confidence\nthreshold '+confidence[min_index]
-    if metric in alpha_div and metric != 'Proportion classified': string = string.replace('Minimum = ', 'Absolute minimum =\n').replace('\nat confidence', ' at confidence')
+    if metric in alpha_div and metric != 'Proportion classified': string = string.replace('Minimum = ', 'Minimum difference =\n').replace('\nat confidence', ' at confidence')
     anchored_text = AnchoredText(string, loc=locations[metric])
     ax.add_artist(anchored_text)
 
@@ -466,7 +473,7 @@ plt.savefig(direc_save+'figures/RefSeqV205_confidence_reduced_metrics_lines_even
 
 ### Reduced without evenness
 
-Figure 3 (version 2 without Simpson's evenness):
+Figure 3 (version 2 without Simpson's evenness - version using):
 ```{python, results='hide', fig.keep='all', eval=FALSE}
 db = 'kraken2_refseqV205'
 this_db = pd.read_csv(direc_save+db+'_calculations.csv', header=0, index_col=0)
@@ -486,14 +493,14 @@ for a in range(3):
     if a in [0, 1,2,3]: c += 1
   
 axes[0].text(0, 1.2, 'A     Precision, recall and F1 score', fontweight='bold', ha='left', va='center', fontsize=16, transform=axes[0].transAxes)
-axes[3].text(0, 1.2, 'B     Reads or taxa classified and alpha diversity', fontweight='bold', ha='left', va='center', fontsize=16, transform=axes[3].transAxes)
-axes[6].text(0, 1.2, 'C     Beta diversity', fontweight='bold', ha='left', va='center', fontsize=16, transform=axes[6].transAxes)
+axes[3].text(0, 1.2, 'B     Reads or taxa classified and alpha-diversity', fontweight='bold', ha='left', va='center', fontsize=16, transform=axes[3].transAxes)
+axes[6].text(0, 1.2, 'C     Beta-diversity', fontweight='bold', ha='left', va='center', fontsize=16, transform=axes[6].transAxes)
 
 for m in range(len(all_metrics_together_reduced)):
     metric = all_metrics_together_reduced[m]
     ax = axes[m]
     plt.sca(ax)
-    ax.set_title(metric.replace('Proportion classified', 'Proportion of reads classified').replace('relative abundance', '\nrelative abundance').replace('raw', '\nraw').replace('phylogenetic', 'taxonomic').replace('unifrac distance', 'unifrac taxonomic distance').replace('Number of taxa', 'Number of species identified'), fontweight='bold')
+    ax.set_title(metric.replace('Proportion classified', 'Proportion of reads classified').replace('relative abundance', '\nrelative abundance').replace('raw', '\nraw').replace('phylogenetic', 'taxonomic').replace('unifrac distance', 'unifrac taxonomic distance').replace('Number of taxa', 'Dissimilarity in number of\nspecies identified').replace('Shannon diversity', 'Dissimilarity in Shannon\ndiversity'), fontweight='bold')
     all_samples = [[] for conf in confidence]
     for sample in samples:
         this_sample, this_conf = [], []
@@ -504,8 +511,10 @@ for m in range(len(all_metrics_together_reduced)):
                 if this_val == 0:
                     this_val = max(this_db.loc[:, metric].values)
             if metric in alpha_div:
-                if metric not in ['Proportion classified', 'Number of taxa']:
+                if metric not in ['Proportion classified']:
+                    #if metric == 'Number of taxa': print(this_val)
                     this_val = this_val-truth_calcs.loc[sample, metric]
+                    #if metric == 'Number of taxa': print(this_val, '\n')
             this_sample.append(this_val)
             all_samples[c].append(this_val)
             this_conf.append(float(confidence[c]))
@@ -524,10 +533,9 @@ for m in range(len(all_metrics_together_reduced)):
     if metric in limits_all: plt.ylim(limits[metric])
     elif metric in prec_rec_f1: plt.ylim([-0.05, 1.05])
     plt.ylabel(y_labels[metric])
-    if m == 4: 
-        plt.ylim([10, 10000])
-        plt.semilogy()
-        continue
+    if m == 4:
+        #plt.ylim([10, 10000])
+        plt.yscale('symlog')
     if metric in prec_rec_f1 or metric == 'Proportion classified':
         max_value = max([abs(val) for val in overall])
         max_index = [abs(val) for val in overall].index(max_value)
@@ -538,7 +546,7 @@ for m in range(len(all_metrics_together_reduced)):
         min_index = [abs(val) for val in overall].index(min_value)
         min_value = overall[min_index]
         string = 'Minimum = '+str(round(min_value, 3))+'\nat confidence\nthreshold '+confidence[min_index]
-    if metric in alpha_div and metric != 'Proportion classified': string = string.replace('Minimum = ', 'Absolute minimum =\n').replace('\nat confidence', ' at confidence')
+    if metric in alpha_div and metric != 'Proportion classified': string = string.replace('Minimum = ', 'Minimum difference =\n').replace('\nat confidence', ' at confidence')
     anchored_text = AnchoredText(string, loc=locations[metric])
     ax.add_artist(anchored_text)
 
@@ -621,6 +629,7 @@ for m in range(len(prec_rec_f1)):
 plt.tight_layout()
 #plt.subplots_adjust(hspace=5)
 plt.savefig(direc_save+'figures/RefSeqV205_confidence_basic_metrics_lines.png', dpi=600, bbox_inches='tight')
+
 ```
 
 ![](/Users/robynwright/Documents/OneDrive/Langille_Lab_postdoc/kraken_confidence_testing_mock/analysis/figures/RefSeqV205_confidence_basic_metrics_lines.png)
@@ -628,7 +637,7 @@ plt.savefig(direc_save+'figures/RefSeqV205_confidence_basic_metrics_lines.png', 
 #### Alpha diversity
 
 Figure S4:
-```{python, results='hide', fig.keep='all', eval=FALSE}
+```{python, results='hide', fig.keep='all'}
 db = 'kraken2_refseqV205'
 this_db = pd.read_csv(direc_save+db+'_calculations.csv', header=0, index_col=0)
 fig = plt.figure(figsize=(11,10))
@@ -648,7 +657,11 @@ for m in range(len(alpha_div)):
     metric = alpha_div[m]
     ax = axes[m]
     plt.sca(ax)
-    ax.set_title(metric.replace('Proportion classified', 'Proportion of reads classified').replace('relative abundance', '\nrelative abundance').replace('raw', '\nraw').replace('phylogenetic', 'taxonomic').replace('unifrac distance', 'unifrac taxonomic distance').replace('Pielou evenness', "Pielou's evenness").replace('Number of taxa', 'Number of species identified'), fontweight='bold')
+    if 'Proportion classified' in metric or 'Number of taxa' in metric:
+      title_name = metric.replace('Proportion classified', 'Proportion of reads classified').replace('Number of taxa', 'Dissimilarity in number of\nspecies identified')
+    else:
+      title_name = 'Dissimilarity in\n'+metric.replace('phylogenetic', 'taxonomic').replace('Pielou evenness', "Pielou's evenness")
+    ax.set_title(title_name, fontweight='bold')
     all_samples = [[] for conf in confidence]
     for sample in samples:
         this_sample, this_conf = [], []
@@ -659,7 +672,7 @@ for m in range(len(alpha_div)):
                 if this_val == 0:
                     this_val = max(this_db.loc[:, metric].values)
             if metric in alpha_div:
-                if metric not in ['Proportion classified', 'Number of taxa']:
+                if metric not in ['Proportion classified']:
                     this_val = this_val-truth_calcs.loc[sample, metric]
             this_sample.append(this_val)
             all_samples[c].append(this_val)
@@ -680,8 +693,7 @@ for m in range(len(alpha_div)):
     elif metric in prec_rec_f1: plt.ylim([-0.05, 1.05])
     plt.ylabel(y_labels[metric])
     if m == 1:
-        plt.semilogy()
-        continue
+        plt.yscale('symlog')
     if metric in prec_rec_f1 or metric == 'Proportion classified':
         max_value = max([abs(val) for val in overall])
         max_index = [abs(val) for val in overall].index(max_value)
@@ -692,13 +704,15 @@ for m in range(len(alpha_div)):
         min_index = [abs(val) for val in overall].index(min_value)
         min_value = overall[min_index]
         string = 'Minimum = '+str(round(min_value, 3))+'\nat confidence\nthreshold '+confidence[min_index]
-    if metric in alpha_div and metric != 'Proportion classified': string = string.replace('Minimum = ', 'Absolute minimum =\n').replace('\nat confidence', ' at confidence')
+    if metric in alpha_div and metric != 'Proportion classified': string = string.replace('Minimum = ', 'Minimum difference =\n').replace('\nat confidence', ' at confidence')
     anchored_text = AnchoredText(string, loc=locations[metric])
     ax.add_artist(anchored_text)
 
 plt.tight_layout()
 #plt.subplots_adjust(hspace=5)
 plt.savefig(direc_save+'figures/RefSeqV205_confidence_alpha_diversity_metrics_lines.png', dpi=600, bbox_inches='tight')
+
+
 ```
 
 ![](/Users/robynwright/Documents/OneDrive/Langille_Lab_postdoc/kraken_confidence_testing_mock/analysis/figures/RefSeqV205_confidence_alpha_diversity_metrics_lines.png)
@@ -822,7 +836,7 @@ def get_plot_single_metric(ax, df, truth_df, these_samples, metric):
     min_index = [abs(val) for val in overall].index(min_value)
     min_value = overall[min_index]
     string = 'Minimum = '+str(round(min_value, 3))+'\nat confidence\nthreshold '+confidence[min_index]
-  if metric in alpha_div and metric != 'Proportion classified': string = string.replace('Minimum = ', 'Absolute minimum =\n').replace('\nat confidence', ' at confidence')
+  if metric in alpha_div and metric != 'Proportion classified': string = string.replace('Minimum = ', 'Minimum difference =\n').replace('\nat confidence', ' at confidence')
   if metric == 'Number of taxa': return
   anchored_text = AnchoredText(string, loc=locations[metric])
   ax.add_artist(anchored_text)
@@ -865,6 +879,8 @@ if saving_figures:
     plt.tight_layout()    
     plt.savefig(direc_save+'figures/sample_characteristics/'+metric.replace(' ', '_')+'.png', dpi=600, bbox_inches='tight')
     plt.close()
+    
+
 ```
 
 Figure S6 (Mean F1 score):
@@ -976,24 +992,24 @@ Figure S6 (Mean F1 score):
 
 ![](/Users/robynwright/Documents/OneDrive/Langille_Lab_postdoc/kraken_confidence_testing_mock/analysis/figures/sample_characteristics/Unweighted_unifrac_distance_raw.png)
 
-### Reduced metrics with a confidence threshold of 0.65
+### Reduced metrics with a confidence threshold of 0.60
 
 Figure S7:
-```{python, results='hide', fig.keep='all', eval=FALSE}
+```{python, results='hide', fig.keep='all'}
 ani = ['ani100', 'ani99', 'ani97', 'ani95']
 species_diversity = ['cLOW', 'cHIGH']
 strain_diversity = ['stFalse', 'stTrue']
-limited_metrics = ['Proportion classified', 'Mean F1 score', "Shannon diversity", 'L1 distance']
+limited_metrics = ['Proportion classified', 'Mean F1 score', 'Number of taxa', "Shannon diversity", 'L1 distance']
 truth_calcs = pd.read_csv(direc_save+'truth_calculations.csv', index_col=0, header=0)
 db = 'kraken2_refseqV205'
 refseq_calcs = pd.read_csv(direc_save+db+'_calculations.csv', index_col=0, header=0)
-limited_limits = {'Proportion classified':[0.935, 1], 'Mean F1 score':[0.4, 0.9], "Shannon diversity":[-0.7, 0.75], 'L1 distance':[400000, 16000000]}
-plt.figure(figsize=(20,8))
+limited_limits = {'Proportion classified':[0.935, 1], 'Mean F1 score':[0.4, 0.9], 'Number of taxa':[-1000, 1000], "Shannon diversity":[-0.7, 0.75], 'L1 distance':[400000, 16000000]}
+plt.figure(figsize=(25,8))
 
 for m in range(len(limited_metrics)):
   metric = limited_metrics[m]
   count = 0
-  ax = plt.subplot(1,4,m+1)
+  ax = plt.subplot(1,5,m+1)
   plt.sca(ax)
   labels, yloc = [], []
   for strain in strain_diversity:
@@ -1006,11 +1022,11 @@ for m in range(len(limited_metrics)):
         for sample in these_samples:
           if an in sample and species in sample and strain in sample:
             try:
-              val = refseq_calcs.loc[sample+'-'+db+'-'+'0.65', metric]
+              val = refseq_calcs.loc[sample+'-'+db+'-'+'0.60', metric]
             except:
               if metric in prec_rec_f1 or metric in alpha_div: val = 0
               else: val = max(refseq_calcs.loc[:, metric].values)
-            if metric in alpha_div and metric not in ['Proportion classified', 'Number of taxa']: val = val-truth_calcs.loc[sample, metric]
+            if metric in alpha_div and metric not in ['Proportion classified']: val = val-truth_calcs.loc[sample, metric]
             all_vals.append(val)
         if len(all_vals) == 0: continue
         labels.append(an.replace('ani', 'ANI')+', Species diversity = '+species.replace('c', '')+'\nStrain diversity = '+strain.replace('st', ''))
@@ -1022,9 +1038,11 @@ for m in range(len(limited_metrics)):
   if m == 0: plt.yticks(yloc, labels)
   else: plt.yticks(yloc, [])
   plt.xlim(limited_limits[metric])
-  plt.title(metric.replace('Proportion classified', 'Proportion of reads classified'), fontweight='bold')
+  plt.title(metric.replace('Proportion classified', 'Proportion of reads classified').replace('Shannon diversity', 'Dissimilarity in\nShannon diversity').replace('Number of taxa', 'Dissimilarity in number of\nspecies identified'), fontweight='bold')
   plt.ylim([0.5, 14.5])
   plt.xlabel(y_labels[metric])
+  if m == 2:
+    plt.xscale('symlog')
 
 plt.savefig(direc_save+'figures/RefSeqV205_sample_characteristics.png', dpi=600, bbox_inches='tight')
 ```
@@ -1052,7 +1070,7 @@ m = mpl.cm.ScalarMappable(norm=norm, cmap=colormap)
 
 all_true, all_false = [], []
 count = 0
-for sample in truth.columns:
+for sample in samples:
   true_positive, false_positive = [], []
   if sample in minimizers:
     for tax in minimizers[sample]:
@@ -1112,10 +1130,15 @@ mi1, mi2, mi3, mi4, mi5 = '100', '500', '1000', '2500', '5000'
 refseq = pd.read_csv(direc_save+'kraken2_refseqV205_calculations.csv', header=0, index_col=0)
 mini = pd.read_csv(direc_save+'kraken2_refseqV205_minimizers_calculations.csv', header=0, index_col=0)
 rename_refseq, rename_mini = {}, {}
-for row in refseq.index.values: rename_refseq[row] = row.split('-')[-1]
-for row in mini.index.values: rename_mini[row] = row.split('-')[-1]
-refseq = refseq.rename(index=rename_refseq)
-mini = mini.rename(index=rename_mini)
+keeping_refseq, keeping_mini = [], []
+for row in refseq.index.values: 
+  rename_refseq[row] = row.split('-')[-1]
+  if row.split('-')[0] in samples: keeping_refseq.append(row)
+for row in mini.index.values: 
+  rename_mini[row] = row.split('-')[-1]
+  if row.split('-')[0] in samples: keeping_mini.append(row)
+refseq = refseq.loc[keeping_refseq, :].rename(index=rename_refseq)
+mini = mini.loc[keeping_mini, :].rename(index=rename_mini)
 
 c1, c2, c3, c4 = '#154360', '#2980B9', '#3498DB', '#5DADE2'
 c5, c6, c7, c8, c9 = '#922B21', '#D35400', '#E67E22', '#F39C12', '#F1C40F'
@@ -1125,7 +1148,7 @@ for a in range(8):
   axes[a].scatter(np.random.normal(1, scale=0.1, size=len(refseq_0)), refseq_0, s=2, alpha=0.1, color=c1)
   refseq_05 = list(refseq.loc['0.50', metrics_using[a]].values)
   axes[a].scatter(np.random.normal(2, scale=0.1, size=len(refseq_05)), refseq_05, s=2, alpha=0.1, color=c2)
-  refseq_06 = list(refseq.loc['0.65', metrics_using[a]].values)
+  refseq_06 = list(refseq.loc['0.60', metrics_using[a]].values)
   axes[a].scatter(np.random.normal(3, scale=0.1, size=len(refseq_06)), refseq_06, s=2, alpha=0.1, color=c3)
   refseq_1 = list(refseq.loc['1.00', metrics_using[a]].values)
   axes[a].scatter(np.random.normal(4, scale=0.1, size=len(refseq_1)), refseq_1, s=2, alpha=0.1, color=c4)
@@ -1142,8 +1165,10 @@ for a in range(8):
   box = axes[a].boxplot([refseq_0, refseq_05, refseq_06, refseq_1, mini_1, mini_2, mini_3, mini_4, mini_5], positions=[1, 2, 3, 4, 6, 7, 8, 9, 10], showfliers=False, widths=0.8)
   plt.sca(axes[a])
   for item in ['boxes', 'whiskers', 'fliers', 'medians', 'caps']: plt.setp(box[item], color='k')
+  print('\n\n\n', metrics_using[a])
   for vals in [refseq_0, refseq_05, refseq_06, refseq_1, mini_1, mini_2, mini_3, mini_4, mini_5]:
     print(np.median(vals))
+  print('\n\n\n')
 for a in range(8):
   plt.sca(axes[a])
   if a == 0 or a > 3:
@@ -1153,7 +1178,7 @@ for a in range(8):
   if a == 0:
     plt.ylim([0.75, 1.05])
 
-colors, names = [c1, c2, c3, c4, c5, c6, c7, c8, c9], ['Confidence=0.00', 'Confidence=0.50', 'Confidence=0.65', 'Confidence=1.00', mi1+'+ Minimizers', mi2+'+ Minimizers', mi3+'+ Minimizers', mi4+'+ Minimizers', mi5+'+ Minimizers']
+colors, names = [c1, c2, c3, c4, c5, c6, c7, c8, c9], ['Confidence=0.00', 'Confidence=0.50', 'Confidence=0.60', 'Confidence=1.00', mi1+'+ Minimizers', mi2+'+ Minimizers', mi3+'+ Minimizers', mi4+'+ Minimizers', mi5+'+ Minimizers']
 handles = [Patch(facecolor=colors[a], edgecolor='k', label=names[a]) for a in range(len(colors))]
 axes[7].legend(handles=handles, bbox_to_anchor=(0.5,1.1), loc='lower center')
 
@@ -1167,7 +1192,7 @@ plt.savefig(direc_save+'figures/kraken_confidence_vs_minimizer.png', bbox_inches
 # 6. Filtering taxa based on confidence threshold {.tabset}
 
 Figure S10:
-```{python, results='hide', fig.keep='all', eval=FALSE}
+```{python, results='hide', fig.keep='all'}
 db = 'kraken2_refseqV205'
 this_db = pd.read_csv(direc_save+db+'_filtered_calculations.csv', header=0, index_col=0)
 fig = plt.figure(figsize=(20,35))
@@ -1185,8 +1210,8 @@ for a in range(7):
   if a in [1,3]: c += 1
   
 axes[0].text(0, 1.2, 'A     Proportion of reads classified, precision, recall and F1 score', fontweight='bold', ha='left', va='center', fontsize=16, transform=axes[0].transAxes)
-axes[8].text(0, 1.2, 'B     Alpha diversity, richness and evenness', fontweight='bold', ha='left', va='center', fontsize=16, transform=axes[8].transAxes)
-axes[15].text(0, 1.2, 'C     Beta diversity', fontweight='bold', ha='left', va='center', fontsize=16, transform=axes[15].transAxes)
+axes[8].text(0, 1.2, 'B     Alpha-diversity, richness and evenness', fontweight='bold', ha='left', va='center', fontsize=16, transform=axes[8].transAxes)
+axes[15].text(0, 1.2, 'C     Beta-diversity', fontweight='bold', ha='left', va='center', fontsize=16, transform=axes[15].transAxes)
 
 all_metrics_together = ['Precision taxa', 'Recall taxa', 'F1 score taxa', 'Proportion classified', 'Precision reads', 'Recall reads', 'F1 score reads', 'Mean F1 score', "Simpson's diversity", 'Shannon diversity', "Faith's phylogenetic diversity", 'Chao1 richness', "McIntosh's evenness", 'Pielou evenness', "Simpson's evenness", 'Robust Aitchisons distance', 'Bray-Curtis dissimilarity relative abundance', 'Weighted unifrac distance relative abundance', 'Unweighted unifrac distance relative abundance', 'Aitchisons distance', 'Bray-Curtis dissimilarity raw', 'Weighted unifrac distance raw', 'Unweighted unifrac distance raw', 'L1 distance']
 
@@ -1194,7 +1219,10 @@ for m in range(len(all_metrics_together)):
   metric = all_metrics_together[m]
   ax = axes[m]
   plt.sca(ax)
-  ax.set_title(metric.replace('Proportion classified', 'Proportion of reads classified').replace('relative abundance', '\nrelative abundance').replace('raw', '\nraw').replace('phylogenetic', 'taxonomic').replace('unifrac distance', 'UniFrac taxonomic distance'), fontweight='bold')
+  title_name = metric.replace('Proportion classified', 'Proportion of reads classified').replace('relative abundance', '\nrelative abundance').replace('raw', '\nraw').replace('phylogenetic', 'taxonomic').replace('unifrac distance', 'UniFrac taxonomic distance').replace('Number of taxa', 'Dissimilarity in number of\nspecies identified')
+  if metric in alpha_div and metric not in ['Proportion classified', 'Number of taxa']:
+    title_name = 'Dissimilarity in\n'+title_name
+  ax.set_title(title_name, fontweight='bold')
   all_samples = [[] for conf in confidence[1:]]
   for sample in samples:
     this_sample, this_conf = [], []
@@ -1242,7 +1270,7 @@ for m in range(len(all_metrics_together)):
     min_index = [abs(val) for val in overall].index(min_value)
     min_value = overall[min_index]
     string = 'Minimum = '+str(round(min_value, 3))+'\nat confidence\nthreshold '+confidence[1:][min_index]
-  if metric in alpha_div and metric != 'Proportion classified': string = string.replace('Minimum = ', 'Absolute minimum =\n').replace('\nat confidence', ' at confidence')
+  if metric in alpha_div and metric != 'Proportion classified': string = string.replace('Minimum = ', 'Minimum difference =\n').replace('\nat confidence', ' at confidence')
   anchored_text = AnchoredText(string, loc=locations[metric])
   tx = ax.add_artist(anchored_text)
 
@@ -1255,7 +1283,8 @@ plt.savefig(direc_save+'figures/RefSeqV205_confidence_filter_all_metrics_lines.p
 
 # 7. Comparison of all databases {.tabset}
 
-```{python, results='hide', fig.keep='all', eval=FALSE}
+Figure 4:
+```{python, results='hide', fig.keep='all'}
 plt.figure(figsize=(34,20))
 all_dbs = ['kraken2_minikraken', 'kraken2_standard_0521', 'kraken2_chocophlan', 'kraken2_refseqV205_100GB', 'kraken2_refseqV208_nt', 'kraken2_refseqV205_500GB', 'kraken2_GTDBr202RefSeqV205', 'kraken2_refseqV205']
 truth_calcs = pd.read_csv(direc_save+'truth_calculations.csv', index_col=0, header=0)
@@ -1273,7 +1302,7 @@ for metric in limited_metrics:
     count += 1
     ax = plt.subplot(5,8,count)
     plt.sca(ax)
-    if db == 'kraken2_minikraken': plt.ylabel(metric.replace('Proportion classified', 'Proportion of reads classified').replace('Number of taxa', 'Number of species identified'), fontweight='bold')
+    if db == 'kraken2_minikraken': plt.ylabel(metric.replace('Proportion classified', 'Proportion of reads classified').replace('Number of taxa', 'Dissimilarity in number of\nspecies identified').replace('Shannon diversity', 'Dissimilarity in Shannon diversity'), fontweight='bold')
     if metric == 'Proportion classified': plt.title(rename_db[db].replace('Complete', '\nComplete').replace('archaea', 'archaea\n'), fontweight='bold')
     if metric == 'L1 distance': 
       plt.xticks([float(conf) for conf in confidence], confidence, rotation=90)
@@ -1290,7 +1319,7 @@ for metric in limited_metrics:
         except:
           if metric in prec_rec_f1: val = 0
           else: val = max(this_db.loc[:, metric].values)
-        if metric in alpha_div and metric not in ['Proportion classified', 'Number of taxa']: val = val-truth_calcs.loc[sample, metric]
+        if metric in alpha_div and metric not in ['Proportion classified']: val = val-truth_calcs.loc[sample, metric]
         this_sample.append(val)
         all_conf[c].append(val)
       line = plt.plot([float(conf) for conf in confidence], this_sample, 'k', alpha=0.05)
@@ -1304,6 +1333,8 @@ for metric in limited_metrics:
     if metric == 'Shannon diversity': line = plt.plot([float(confidence[0]), float(confidence[-1])], [0,0], 'k--')
     if metric != 'Number of taxa':
       plt.ylim(limited_limits[metric])
+    else:
+      plt.yscale('symlog')
     if metric in prec_rec_f1 or metric == 'Proportion classified':
       max_value = max([abs(val) for val in overall])
       max_index = [abs(val) for val in overall].index(max_value)
@@ -1314,10 +1345,9 @@ for metric in limited_metrics:
       min_index = [abs(val) for val in overall].index(min_value)
       min_value = overall[min_index]
       string = 'Minimum = '+str(round(min_value, 3))+'\nat confidence\nthreshold '+confidence[min_index]
-    if metric in alpha_div and metric != 'Proportion classified': string = string.replace('Minimum = ', 'Absolute minimum =\n').replace('\nat confidence', ' at confidence')
-    if metric != 'Number of taxa':
-      anchored_text = AnchoredText(string, loc=limited_locations[count-1])
-      ax.add_artist(anchored_text)
+    if metric in alpha_div and metric != 'Proportion classified': string = string.replace('Minimum = ', 'Minimum difference =\n').replace('\nat confidence', ' at confidence')
+    anchored_text = AnchoredText(string, loc=limited_locations[count-1])
+    ax.add_artist(anchored_text)
 
 plt.savefig(direc_save+'figures/Databases_confidence_comparison_reduced_metrics.png', dpi=600, bbox_inches='tight')
 ```
@@ -1327,26 +1357,30 @@ plt.savefig(direc_save+'figures/Databases_confidence_comparison_reduced_metrics.
 # 8. Comparison of MetaPhlAn 3 options {.tabset}
 
 Figure S11:
-```{python, results='hide', fig.keep='all', eval=FALSE}
-plt.figure(figsize=(20,24))
+```{python, results='hide', fig.keep='all'}
+plt.figure(figsize=(24,24))
+all_metrics = prec_rec_f1+alpha_div+beta_div
 settings = ['estimated_reads', 'default', 'very_sensitive_local', 'sensitive', 'sensitive_local', 'avg_g', 'avg_l', 'tavg_l', 'wavg_g', 'wavg_l', 'med', 'humann_bowtie2', 'humann_diamond']
 truth_calcs = pd.read_csv(direc_save+'truth_calculations.csv', index_col=0, header=0)
 metaphlan = pd.read_csv(direc_save+'MetaPhlAn_calculations.csv', index_col=0, header=0)
 #limited_metrics = ['Proportion classified', 'Mean F1 score', 'L1 distance']
 ylabels = ['Default', 'Bowtie2\nmapping\noptions', 'Statistical options for\nestimating number of reads', 'HUMAnN 3\nmapped\nreads']
 
-all_metrics_together = ['Precision taxa', 'Recall taxa', 'F1 score taxa', 'Proportion classified', 'Precision reads', 'Recall reads', 'F1 score reads', 'Mean F1 score', "Simpson's diversity", 'Shannon diversity', "Faith's phylogenetic diversity", 'Chao1 richness', "McIntosh's evenness", 'Pielou evenness', "Simpson's evenness", 'Robust Aitchisons distance', 'Bray-Curtis dissimilarity relative abundance', 'Weighted unifrac distance relative abundance', 'Unweighted unifrac distance relative abundance', 'Aitchisons distance', 'Bray-Curtis dissimilarity raw', 'Weighted unifrac distance raw', 'Unweighted unifrac distance raw', 'L1 distance']
+#all_metrics_together = ['Precision taxa', 'Recall taxa', 'F1 score taxa', 'Proportion classified', 'Precision reads', 'Recall reads', 'F1 score reads', 'Mean F1 score', "Simpson's diversity", 'Shannon diversity', "Faith's phylogenetic diversity", 'Chao1 richness', "McIntosh's evenness", 'Pielou evenness', "Simpson's evenness", 'Robust Aitchisons distance', 'Bray-Curtis dissimilarity relative abundance', 'Weighted unifrac distance relative abundance', 'Unweighted unifrac distance relative abundance', 'Aitchisons distance', 'Bray-Curtis dissimilarity raw', 'Weighted unifrac distance raw', 'Unweighted unifrac distance raw', 'L1 distance']
 
 colors = ['r', 'k', 'k', 'k', 'k', 'k', 'k', 'k', 'k', 'k', 'k', 'k', 'k']
 yplt = [17, 15, 13, 12, 11, 9, 8, 7, 6, 5, 4, 2, 1]
 x_ylabs, y_ylabs = [-0.85, -0.7, -1.15, -0.7], [14.5, 11.5, 6, 1]
 y_ylabs = [(y*(10/17))/10 for y in y_ylabs]
 
-for m in range(len(all_metrics_together)):
-  metric = all_metrics_together[m]
-  ax = plt.subplot(4,6,m+1)
+for m in range(len(all_metrics)):
+  metric = all_metrics[m]
+  ax = plt.subplot(4,7,m+1)
   plt.sca(ax)
-  plt.title(metric.replace('relative abundance', '\nrelative abundance').replace('raw', '\nraw').replace('Proportion classified', 'Proportion of reads classified').replace('phylogenetic', 'taxonomic').replace('unifrac distance', 'UniFrac\ntaxonomic distance'), fontweight='bold')
+  title_name = metric.replace('relative abundance', '\nrelative abundance').replace('raw', '\nraw').replace('Proportion classified', 'Proportion of reads classified').replace('phylogenetic', 'taxonomic').replace('unifrac distance', 'UniFrac\ntaxonomic distance').replace('Number of taxa', 'Dissimilarity in number of\nspecies identified')
+  if metric in alpha_div and metric not in ['Proportion classified', 'Number of taxa']:
+    title_name = 'Dissimilarity in\n'+title_name
+  plt.title(title_name, fontweight='bold')
   if metric in alpha_div:
     plt.plot([0, 0], [0.5, 17.5], 'k--', lw=1)
   for s in range(len(settings)):
@@ -1358,7 +1392,7 @@ for m in range(len(all_metrics_together)):
       if metric in alpha_div or metric in beta_div and metric != 'Proportion classified':
         if val == 0:
           val = max(metaphlan.loc[:, metric].values)
-      if metric in alpha_div and metric not in ['Proportion classified', 'Number of taxa']:
+      if metric in alpha_div and metric not in ['Proportion classified']:
         val = val-truth_calcs.loc[sample, metric]
       this_setting.append(val)
     plot = plt.scatter(this_setting, np.random.normal(yplt[s], scale=0.1, size=len(this_setting)), s=2, alpha=0.1, color=colors[s])
@@ -1369,7 +1403,7 @@ for m in range(len(all_metrics_together)):
     elif abs(med) < 20: smed = str(round(med, 1))
     else: smed = str(round(med))
     plt.text(med, yplt[s]-0.3, smed, ha='center', va='top', fontsize=6, bbox=dict(facecolor='w', edgecolor='w', boxstyle='round, pad=0.05'))
-  if m in [0, 6, 12, 18]:
+  if m in [0, 7, 14, 21]:
     rename_settings['estimated_reads'] = 'Default estimated reads\n(very-sensitive\ntavg_g: truncated clade global average)'
     plt.yticks(yplt, [rename_settings[setting] for setting in settings], fontsize=8, linespacing=0.8)
     for l in range(len(ylabels)):
@@ -1379,8 +1413,10 @@ for m in range(len(all_metrics_together)):
   plt.xlabel(y_labels[metric], fontsize=8)
   if metric == 'Proportion classified':
     plt.xlim([-0.05, 1.05])
+  elif metric == 'Number of taxa':
+    ax.set_xscale('symlog')
   plt.ylim([0, 17.5])
-  if 'unifrac' in metric:
+  if 'Weighted unifrac' in metric:
     plt.semilogx()
 
 rename_settings['estimated_reads'] = 'Default estimated reads\n(tavg_g/very-sensitive)'
@@ -1404,11 +1440,11 @@ chocophlan = pd.read_csv(direc_save+'kraken2_chocophlan_calculations.csv', index
 settings = ['default', 'estimated_reads', 'bowtie2_reads', 'very_sensitive_local', 'sensitive', 'sensitive_local', 'avg_g', 'avg_l', 'tavg_l', 'wavg_g', 'wavg_l', 'med']
 comp_dbs = [metaphlan, chocophlan, refseq_V205]
 db_names = ['MetaPhlAn', 'kraken2_chocophlan', 'kraken2_refseqV205']
-limits = [[-0.05, 1.05], [-1000, 15000], [-0.05, 0.85], [-1.5, 1.5], [400000, 20000000]]
+limits = [[-0.05, 1.1], [-2000, 20000], [-0.05, 0.85], [-1.5, 1.5], [400000, 20000000]]
 
-plotting_db = [['estimated_reads', 'sensitive'], ['0.00', '0.25', '0.50', '0.85', '1.00'], ['0.00', '0.15', '0.50', '0.65', '1.00']]
-labels = ['Estimated reads: very-sensitive', 'Estimated reads: sensitive', 'Confidence threshold=0.00', 'Confidence threshold=0.25', 'Confidence threshold=0.50', 'Confidence threshold=0.85', 'Confidence threshold=1.00', 'Confidence threshold=0.00', 'Confidence threshold=0.15', 'Confidence threshold=0.50', 'Confidence threshold=0.65', 'Confidence threshold=1.00']
-xlabels = ['Proportion', 'Species', 'F1 score', 'Difference between classification\nand known composition', 'Distance between classification\nand known composition']
+plotting_db = [['estimated_reads', 'sensitive'], ['0.00', '0.40', '0.50', '0.90', '1.00'], ['0.00', '0.15', '0.50', '0.60', '1.00']]
+labels = ['Estimated reads: very-sensitive', 'Estimated reads: sensitive', 'Confidence threshold=0.00', 'Confidence threshold=0.40', 'Confidence threshold=0.50', 'Confidence threshold=0.90', 'Confidence threshold=1.00', 'Confidence threshold=0.00', 'Confidence threshold=0.15', 'Confidence threshold=0.50', 'Confidence threshold=0.60', 'Confidence threshold=1.00']
+xlabels = ['Proportion', 'Difference between classification\nand known composition', 'F1 score', 'Difference between classification\nand known composition', 'Distance between classification\nand known composition']
 
 axes = []
 for m in range(len(limited_metrics)):
@@ -1416,7 +1452,7 @@ for m in range(len(limited_metrics)):
   ax = plt.subplot(1,5,m+1)
   plt.sca(ax)
   axes.append(ax)
-  plt.title(metric.replace('Proportion classified', 'Proportion of reads classified').replace('Number of taxa', 'Number of species identified'), fontweight='bold')
+  plt.title(metric.replace('Proportion classified', 'Proportion of reads classified').replace('Number of taxa', 'Dissimilarity in number of\nspecies identified').replace('Shannon diversity', 'Dissimilarity in\nShannon diversity'), fontweight='bold')
   medians = []
   loc = 0
   locs = []
@@ -1429,10 +1465,10 @@ for m in range(len(limited_metrics)):
           val = db.loc[sample+'-'+db_names[d]+'-'+setting, metric]
         except:
           val = 0
-        if metric in alpha_div or metric in beta_div and metric not in ['Proportion classified', 'Number of taxa']:
+        if metric in alpha_div or metric in beta_div and metric not in ['Proportion classified']:
           if val == 0:
             val = max(db.loc[:, metric].values)
-        if metric in alpha_div and metric not in ['Proportion classified', 'Number of taxa']:
+        if metric in alpha_div and metric not in ['Proportion classified']:
           val = val-truth_calcs.loc[sample, metric]
         #if metric in alpha_div: print(sample+'-'+db_names[d]+'-'+setting, val)
         this_db.append(val)
@@ -1452,6 +1488,9 @@ for m in range(len(limited_metrics)):
     loc += 1
   if metric == 'Proportion classified':py = plt.yticks(locs, labels)
   else: py = plt.yticks(locs, [])
+  if metric == 'Number of taxa':
+    ax.set_xscale('symlog')
+    plt.xticks([-1000, -10, 0, 10, 1000])
   px = plt.xlabel(xlabels[m])
   px = plt.xlim(limits[m])
   py = plt.ylim([0.25, loc-0.5])
@@ -1483,8 +1522,8 @@ db_names = ['MetaPhlAn', 'kraken2_chocophlan', 'kraken2_refseqV205']
 limits = [[-0.05, 1.05], [-0.05, 0.85], [-0.05, 0.3], [400000, 20000000]]
 location_single = ['lower left', 'lower right', 'upper right', 'upper right']
 
-plotting_db = [['estimated_reads', 'sensitive'], ['0.00', '0.35', '0.50', '0.90', '1.00'], ['0.00', '0.15', '0.50', '0.60', '1.00']]
-labels = ['Estimated reads: very-sensitive', 'Estimated reads: sensitive', 'Confidence threshold=0.00', 'Confidence threshold=0.35', 'Confidence threshold=0.50', 'Confidence threshold=0.90', 'Confidence threshold=1.00', 'Confidence threshold=0.00', 'Confidence threshold=0.15', 'Confidence threshold=0.50', 'Confidence threshold=0.60', 'Confidence threshold=1.00']
+plotting_db = [['estimated_reads', 'sensitive'], ['0.00', '0.40', '0.50', '0.90', '1.00'], ['0.00', '0.15', '0.50', '0.60', '1.00']]
+labels = ['Estimated reads: very-sensitive', 'Estimated reads: sensitive', 'Confidence threshold=0.00', 'Confidence threshold=0.40', 'Confidence threshold=0.50', 'Confidence threshold=0.90', 'Confidence threshold=1.00', 'Confidence threshold=0.00', 'Confidence threshold=0.15', 'Confidence threshold=0.50', 'Confidence threshold=0.60', 'Confidence threshold=1.00']
 xlabels = ['Proportion', 'Score', 'Difference', 'Distance']
 
 axes = []
@@ -1493,7 +1532,10 @@ for m in range(len(all_metrics)):
   ax = plt.subplot(4,7,m+1)
   plt.sca(ax)
   axes.append(ax)
-  ttl = plt.title(metric.replace('Proportion classified', 'Proportion of\nreads classified').replace('relative abundance', '\nrelative abundance').replace('raw', '\nraw').replace('Number of taxa', 'Number of species\nidentified'), fontweight='bold')
+  title_name = metric.replace('relative abundance', '\nrelative abundance').replace('raw', '\nraw').replace('Proportion classified', 'Proportion of reads classified').replace('phylogenetic', 'taxonomic').replace('unifrac distance', 'UniFrac\ntaxonomic distance').replace('Number of taxa', 'Dissimilarity in number of\nspecies identified')
+  if metric in alpha_div and metric not in ['Proportion classified', 'Number of taxa']:
+    title_name = 'Dissimilarity in\n'+title_name
+  ttl = plt.title(title_name, fontweight='bold')
   medians = []
   loc = 0
   locs = []
@@ -1506,10 +1548,10 @@ for m in range(len(all_metrics)):
           val = db.loc[sample+'-'+db_names[d]+'-'+setting, metric]
         except:
           val = 0
-        if metric in alpha_div or metric in beta_div and metric not in ['Proportion classified', 'Number of taxa']:
+        if metric in alpha_div or metric in beta_div and metric not in ['Proportion classified']:
           if val == 0:
             val = max(db.loc[:, metric].values)
-        if metric in alpha_div and metric not in ['Proportion classified', 'Number of taxa']:
+        if metric in alpha_div and metric not in ['Proportion classified']:
           val = val-truth_calcs.loc[sample, metric]
         #if metric in alpha_div: print(sample+'-'+db_names[d]+'-'+setting, val)
         this_db.append(val)
@@ -1536,10 +1578,15 @@ for m in range(len(all_metrics)):
   if metric in limits_all:
     pt = plt.xlim(limits_all[metric])
   elif metric != 'Number of taxa': pt = plt.xlim([-0.05, 1.10])
+  if metric == 'Number of taxa':
+    ax.set_xscale('symlog')
+    xt = plt.xticks([-1000, -10, 0, 10, 1000])
   pt = plt.ylim([0.25, loc-0.5])
+  xl = plt.xlabel(y_labels[metric], fontsize=8)
 
 #plt.tight_layout()
 #plt.show()
+plt.subplots_adjust(hspace=0.35)
 plt.savefig(direc_save+'figures/metaphlan_vs_kraken_choco_v205_horizontal_all_metrics.png', dpi=600, bbox_inches='tight')
 ```
 
@@ -1548,13 +1595,13 @@ plt.savefig(direc_save+'figures/metaphlan_vs_kraken_choco_v205_horizontal_all_me
 # 10. Kraken2 vs MetaPhlAn 3 (normalising for genome size in mock community samples) {.tabset}
 
 Figure S13:
-```{python, results='hide', fig.keep='all', eval=FALSE}
+```{python, results='hide', fig.keep='all'}
 plt.figure(figsize=(20,6))
 meta_props = pd.read_csv(direc_save+'proportions/MetaPhlAn_calculations.csv', index_col=0, header=0)
 refseq_props_ln = pd.read_csv(direc_save+'proportions/kraken2_refseqV205_length_norm_calculations.csv', index_col=0, header=0)
 refseq_props = pd.read_csv(direc_save+'proportions/kraken2_refseqV205_proportions_calculations.csv', index_col=0, header=0)
 truth_props = pd.read_csv(direc_save+'proportions/truth_calculations.csv', index_col=0, header=0)
-genome_metrics = ['Precision taxa', 'Recall taxa', 'F1 score taxa', "Simpson's diversity", "L1 distance"]
+genome_metrics = ['Precision taxa', 'Recall taxa', 'F1 score taxa', "Shannon diversity", "L1 distance"]
 db = 'kraken2_refseqV205_proportions'
 
 limits_proportions = {"Simpson's diversity":[-0.4, 0], "Shannon diversity":[-1.5, 0.5], "Faith's phylogenetic diversity":[-100, 5], "Chao1 richness":[-200, 8000], "McIntosh's evenness":[-0.5, 1.5], "Pielou evenness":[-0.8, -0.2], "Simpson's evenness": [-1.5, -0.5], "L1 distance":[50, 150], "Robust Aitchisons distance":[0, 10], "Bray-Curtis dissimilarity relative abundance":[0.2, 0.7], "Weighted unifrac distance relative abundance":[150, 1000], "Unweighted unifrac distance relative abundance":[-0.05, 0.8], "Aitchisons distance":[-10, 175]}
@@ -1564,10 +1611,10 @@ for m in range(len(genome_metrics)):
   metric = genome_metrics[m]
   ax = plt.subplot(1,5,m+1)
   plt.sca(ax)
-  ttl = ax.set_title(metric.replace('Proportion classified', 'Proportion of reads classified').replace('relative abundance', '\nrelative abundance').replace('raw', '\nraw').replace('phylogenetic', 'taxonomic').replace('unifrac distance', 'unifrac taxonomic distance'), fontweight='bold')
+  ttl = ax.set_title(metric.replace('Proportion classified', 'Proportion of reads classified').replace('Shannon diversity', 'Dissimilarity in\nShannon diversity'), fontweight='bold')
   db_files = [meta_props, refseq_props_ln, refseq_props]
   db_names = ['MetaPhlAn', 'kraken2_refseqV205', 'kraken2_refseqV205_proportions']
-  confidence_limit = ['0.00', '0.15', '0.50', '0.65', '1.00']
+  confidence_limit = ['0.00', '0.15', '0.50', '0.60', '1.00']
   plotting_samples = []
   color_plot = ['#512E5F', '#CB4335', '#CB4335', '#CB4335', '#CB4335', '#CB4335', '#E67E22', '#E67E22', '#E67E22', '#E67E22', '#E67E22']
   for d in range(len(db_files)):
