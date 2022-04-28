@@ -27,6 +27,8 @@ metaphlan --install --bowtie2db metaphlan/
 
 ## Kraken2 {.tabset}
 
+Note that all of these databases can also be downloaded from [Dropbox](https://www.dropbox.com/sh/lvlz2wpsssvsrad/AAC-BkJja8LvlDoNDB4qgnHNa?dl=0).
+
 ### Standard
 
 Downloaded from the Langmead lab - Kraken2 links to the Loman lab, which links to the Langmead lab:
@@ -36,7 +38,7 @@ wget https://genome-idx.s3.amazonaws.com/kraken/k2_standard_20210517.tar.gz
 
 ### Download all genomes needed
 
-To do this with the least amount of steps/downloads possible, I follow the instructions for making the GTDB + NCBI database first, on the [Microbiome Helper github](https://github.com/LangilleLab/microbiome_helper/wiki).<br>
+To do this with the least amount of steps/downloads possible, I follow the instructions for making the GTDB + NCBI database first, in Make-custom-Kraken2-database.md.<br>
 
 This is as follows:<br>
 1. `python get_ncbi_other_domains.py --processors 12` - this gets the fungi, invertebrate, plant, protozoa, vertebrate_mammalian, vertebrate_other and viral genomes and adds them to the folder `ncbi_genomes/` and also makes a file with taxonomy information on them (run May 2021, V205)<br>

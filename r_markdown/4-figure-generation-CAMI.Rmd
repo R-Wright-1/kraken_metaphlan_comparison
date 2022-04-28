@@ -145,7 +145,7 @@ plt.savefig(direc+'analysis/figures/CAMI2/Databases_proportion_covered_profiles.
 
 ## And splitting by sample type
 
-```{python, results='hide', fig.keep='all'}
+```{python, results='hide', fig.keep='all', eval=FALSE}
 db_sizes = {'kraken2_chocophlan':r'$\bf{73 GB}$'+'\n13,475 taxa\n132,661 genomes', 'kraken2_standard_0521':r'$\bf{51 GB}$'+'\n15,897 taxa\n32,409 genomes', 'kraken2_minikraken':r'$\bf{8 GB}$'+'\n5,758 taxa\n ', 'kraken2_refseqV205':r'$\bf{1,189 GB/466 GB/94 GB}$'+'\n108,257 taxa\n227,889 genomes', 'kraken2_refseqV208_nt':r'$\bf{308 GB}$'+'\n113,002 taxa\n ', 'kraken2_GTDBr202RefSeqV205':r'$\bf{1,148 GB}$'+'\n59,472 taxa\n72,244 genomes'}
 this_dbs = ['kraken2_minikraken', 'kraken2_standard_0521', 'kraken2_chocophlan', 'kraken2_refseqV208_nt', 'kraken2_GTDBr202RefSeqV205', 'kraken2_refseqV205']
 db_names = ['MiniKraken2 V2', 'NCBI RefSeq Standard (05/2021)', 'ChocoPhlAn 3', 'NCBI RefSeq V208 nt', 'GTDB r202 bacteria/archaea\n+ NCBI RefSeq V205 other domains', 'NCBI RefSeq Complete V205']
@@ -316,7 +316,7 @@ plt.savefig(direc+'analysis/figures/CAMI2/Databases_proportion_covered_species_g
 
 ### Reduced without evenness taxonomic profile
 
-```{python, results='hide', fig.keep='all'}
+```{python, results='hide', fig.keep='all', eval=FALSE}
 db = 'kraken2_refseqV205'
 this_db = pd.read_csv(direc_save+db+'_calculations.csv', header=0, index_col=0)
 fig = plt.figure(figsize=(20,35))
@@ -564,11 +564,13 @@ plt.subplots_adjust(hspace=3, wspace=0.3)
 plt.savefig(direc+'analysis/figures/CAMI2/RefSeqV205_100GB_confidence_reduced_metrics_lines_profile_90.png', dpi=600, bbox_inches='tight')
 ```
 
+![](/Users/robynwright/Library/CloudStorage/OneDrive-Personal/Langille_Lab_postdoc/kraken_confidence_testing_mock/analysis/figures/CAMI2/RefSeqV205_100GB_confidence_reduced_metrics_lines_profile_90.png)
+
 ### Other metrics {.tabset}
 
 #### Precision, recall, F1 score
 
-```{python, results='hide', fig.keep='all'}
+```{python, results='hide', fig.keep='all', eval=FALSE}
 db = 'kraken2_refseqV205'
 this_db = pd.read_csv(direc_save+db+'_calculations.csv', header=0, index_col=0)
 fig = plt.figure(figsize=(15,15))
@@ -683,7 +685,7 @@ plt.savefig(direc+'analysis/figures/CAMI2/RefSeqV205_confidence_basic_metrics_li
 
 #### Alpha diversity
 
-```{python, results='hide', fig.keep='all'}
+```{python, results='hide', fig.keep='all', eval=FALSE}
 db = 'kraken2_refseqV205'
 this_db = pd.read_csv(direc_save+db+'_calculations.csv', header=0, index_col=0)
 fig = plt.figure(figsize=(15,15))
@@ -806,7 +808,7 @@ plt.savefig(direc+'analysis/figures/CAMI2/RefSeqV205_confidence_alpha_diversity_
 
 #### Beta diversity
 
-```{python, results='hide', fig.keep='all'}
+```{python, results='hide', fig.keep='all', eval=FALSE}
 db = 'kraken2_refseqV205'
 this_db = pd.read_csv(direc_save+db+'_calculations.csv', header=0, index_col=0)
 fig = plt.figure(figsize=(15,15))
@@ -1027,6 +1029,8 @@ for m in range(len(all_metrics_together_reduced)):
 plt.subplots_adjust(hspace=3, wspace=0.3)
 plt.savefig(direc+'analysis/figures/CAMI2/RefSeqV205_confidence_reduced_metrics_lines_species_80.png', dpi=600, bbox_inches='tight')
 ```
+
+![](/Users/robynwright/Documents/OneDrive/Langille_Lab_postdoc/kraken_confidence_testing_mock/analysis/figures/CAMI2/RefSeqV205_confidence_reduced_metrics_lines_species_80.png)
 
 ```{python, results='hide', fig.keep='all', eval=FALSE}
 db = 'kraken2_refseqV205'
@@ -1415,7 +1419,9 @@ all_axes[0][-1].legend(handles=handles, bbox_to_anchor=(1.05, 1.05), loc='upper 
 plt.savefig(direc+'analysis/figures/CAMI2/Databases_confidence_comparison_reduced_metrics.png', dpi=600, bbox_inches='tight')
 ```
 
-```{python, results='hide', fig.keep='all'}
+![](/Users/robynwright/Documents/OneDrive/Langille_Lab_postdoc/kraken_confidence_testing_mock/analysis/figures/CAMI2/Databases_confidence_comparison_reduced_metrics.png)
+
+```{python, results='hide', fig.keep='all', eval=FALSE}
 plt.figure(figsize=(18,24))
 limited_metrics = ['Proportion classified', 'Number of taxa', 'Mean F1 score', "Shannon diversity", 'L1 distance']
 truth_calcs = pd.read_csv(direc_save+'truth_profile_calculations.csv', index_col=0, header=0)
@@ -1504,12 +1510,14 @@ plt.tight_layout()
 plt.savefig(direc+'analysis/figures/CAMI2/metaphlan_vs_kraken_choco_v205_horizontal_reduced_metrics.png', dpi=600, bbox_inches='tight')
 ```
 
+![](/Users/robynwright/Documents/OneDrive/Langille_Lab_postdoc/kraken_confidence_testing_mock/analysis/figures/CAMI2/metaphlan_vs_kraken_choco_v205_horizontal_reduced_metrics.png)
+
 # 4. Summary of CAMI1 and CAMI2
 
 ## A. Proportion of reads with a species level classification and taxa covered by database
 
 Figure S14:
-```{python}
+```{python, eval=FALSE}
 cami2_proportions_pd = pd.read_csv(direc_db+'truth_profile_proportion.csv', index_col=0, header=0)
 cami2_proportions_pd_reads = pd.read_csv(direc_db+'truth_not_below_species_proportion.csv', index_col=0, header=0)
 cami1_proportions = {'goldstandard_medium_1':0.684289, 'goldstandard_high_1':0.869688, 'goldstandard_low_1':0.892716, 'goldstandard_high_3':0.873655, 'goldstandard_medium_2':0.784075, 'goldstandard_high_2':0.874149, 'goldstandard_high_4':0.878439, 'goldstandard_high_5':0.86835}
@@ -1580,8 +1588,10 @@ plt.tight_layout()
 plt.savefig(direc+'analysis/figures/CAMI2/CAMI1_2_species-level_classification.png', dpi=600, bbox_inches='tight')
 ```
 
+![](/Users/robynwright/Documents/OneDrive/Langille_Lab_postdoc/kraken_confidence_testing_mock/analysis/figures/CAMI2//CAMI1_2_species-level_classification.png)
+
 Species level classification and coverage by database:
-```{python}
+```{python, eval=FALSE}
 cami2_proportions_pd = pd.read_csv(direc_db+'truth_profile_proportion.csv', index_col=0, header=0)
 cami2_proportions_pd_reads = pd.read_csv(direc_db+'truth_not_below_species_proportion.csv', index_col=0, header=0)
 cami1_proportions = {'goldstandard_medium_1':0.684289, 'goldstandard_high_1':0.869688, 'goldstandard_low_1':0.892716, 'goldstandard_high_3':0.873655, 'goldstandard_medium_2':0.784075, 'goldstandard_high_2':0.874149, 'goldstandard_high_4':0.878439, 'goldstandard_high_5':0.86835}
@@ -1654,7 +1664,7 @@ plt.savefig(direc+'analysis/figures/CAMI2/CAMI1_2_species-level_classification_a
 
 Figure S15:
 Taxa and reads covered by database:
-```{python, results='hide', fig.keep='all'}
+```{python, results='hide', fig.keep='all', eval=FALSE}
 db_sizes = {'kraken2_chocophlan':r'$\bf{73 GB}$'+'\n13,475 taxa\n132,661 genomes', 'kraken2_standard_0521':r'$\bf{51 GB}$'+'\n15,897 taxa\n32,409 genomes', 'kraken2_minikraken':r'$\bf{8 GB}$'+'\n5,758 taxa\n ', 'kraken2_refseqV205':r'$\bf{1,189 GB/466 GB/94 GB}$'+'\n108,257 taxa\n227,889 genomes', 'kraken2_refseqV208_nt':r'$\bf{308 GB}$'+'\n113,002 taxa\n ', 'kraken2_GTDBr202RefSeqV205':r'$\bf{1,148 GB}$'+'\n59,472 taxa\n72,244 genomes'}
 this_dbs = ['kraken2_minikraken', 'kraken2_standard_0521', 'kraken2_chocophlan', 'kraken2_refseqV208_nt', 'kraken2_GTDBr202RefSeqV205', 'kraken2_refseqV205']
 db_names = ['MiniKraken2 V2', 'NCBI RefSeq Standard (05/2021)', 'ChocoPhlAn 3', 'NCBI RefSeq V208 nt', 'GTDB r202 bacteria/archaea\n+ NCBI RefSeq V205 other domains', 'NCBI RefSeq Complete V205']
@@ -1735,9 +1745,11 @@ plt.tight_layout()
 plt.savefig(direc+'analysis/figures/CAMI2/CAMI1_2_gold_standard_taxa_covered_split_samples.png', dpi=600, bbox_inches='tight')
 ```
 
+![](/Users/robynwright/Documents/OneDrive/Langille_Lab_postdoc/kraken_confidence_testing_mock/analysis/figures/CAMI2/CAMI1_2_gold_standard_taxa_covered_split_samples.png)
+
 Figure S16:
 Taxa and reads from read-by-read covered by database (species and genus levels):
-```{python, results='hide', fig.keep='all'}
+```{python, results='hide', fig.keep='all', eval=FALSE}
 db_sizes = {'kraken2_chocophlan':r'$\bf{73 GB}$'+'\n13,475 taxa\n132,661 genomes', 'kraken2_standard_0521':r'$\bf{51 GB}$'+'\n15,897 taxa\n32,409 genomes', 'kraken2_minikraken':r'$\bf{8 GB}$'+'\n5,758 taxa\n ', 'kraken2_refseqV205':r'$\bf{1,189 GB/466 GB/94 GB}$'+'\n108,257 taxa\n227,889 genomes', 'kraken2_refseqV208_nt':r'$\bf{308 GB}$'+'\n113,002 taxa\n ', 'kraken2_GTDBr202RefSeqV205':r'$\bf{1,148 GB}$'+'\n59,472 taxa\n72,244 genomes'}
 this_dbs = ['kraken2_minikraken', 'kraken2_standard_0521', 'kraken2_chocophlan', 'kraken2_refseqV208_nt', 'kraken2_GTDBr202RefSeqV205', 'kraken2_refseqV205']
 db_names = ['MiniKraken2 V2', 'NCBI RefSeq Standard (05/2021)', 'ChocoPhlAn 3', 'NCBI RefSeq V208 nt', 'GTDB r202 bacteria/archaea\n+ NCBI RefSeq V205 other domains', 'NCBI RefSeq Complete V205']
@@ -1823,6 +1835,8 @@ plt.tight_layout()
 plt.savefig(direc+'analysis/figures/CAMI2/CAMI1_2_read-by-read_taxa_covered_split_samples_species_genus.png', dpi=600, bbox_inches='tight')
 ```
 
+![](/Users/robynwright/Documents/OneDrive/Langille_Lab_postdoc/kraken_confidence_testing_mock/analysis/figures/CAMI2/CAMI1_2_read-by-read_taxa_covered_split_samples_species_genus.png)
+
 ## B. Summary of proportion classified and recall
 
 Just a figure showing:
@@ -1833,7 +1847,7 @@ Just a figure showing:
 Do this only for confidence threshold = 0 (as this is the highest) and also include MetaPhlAn 3 here.
 
 Figure S17:
-```{python}
+```{python, eval=FALSE}
 CAMI1_loc = '/Users/robynwright/Documents/OneDrive/Langille_Lab_postdoc/kraken_confidence_testing_mock/analysis/'
 CAMI2_loc = '/Users/robynwright/Documents/OneDrive/Langille_Lab_postdoc/kraken_confidence_testing_mock/analysis/CAMI2/'
 CAMI2_loc_2 = '/Users/robynwright/Documents/OneDrive/Langille_Lab_postdoc/kraken_confidence_testing_mock/analysis/CAMI2/analysis_1_added/'
@@ -1894,6 +1908,8 @@ for group in sample_colors:
 
 plt.savefig(direc+'analysis/figures/CAMI2/CAMI1_2_proportion_classified_recall_summary.png', dpi=600, bbox_inches='tight')
 ```
+
+![](/Users/robynwright/Documents/OneDrive/Langille_Lab_postdoc/kraken_confidence_testing_mock/analysis/figures/CAMI2/CAMI1_2_proportion_classified_recall_summary.png)
 
 ## C. Proportion reads classified and recall across different confidence thresholds
 
@@ -2078,12 +2094,14 @@ plt.savefig(direc+'analysis/figures/CAMI2/Databases_confidence_comparison_propor
 #plt.show()
 ```
 
+![](/Users/robynwright/Documents/OneDrive/Langille_Lab_postdoc/kraken_confidence_testing_mock/analysis/figures/CAMI2/Databases_confidence_comparison_proportion_recall.png)
+
 ## D. Index for RefSeq Complete at all confidence threshold
 
 Index
 Also proportion reads classified correctly (or proportion unclassified?) vs index of those classified wrong and those classified at higher levels for different confidence thresholds - make it look like a beta diversity plot?
 
-```{python}
+```{python, eval=FALSE}
 outraw = pd.read_csv(direc+'analysis/CAMI2/summary_outraw_confidence.csv', index_col=0, header=0)
 avg = 'Mean'
 fig = plt.figure(figsize=(25,15))
@@ -2139,7 +2157,9 @@ for a in range(len(datasets)):
 plt.savefig(direc+'analysis/figures/CAMI2/kraken_classified_index_'+avg+'_confidence.png', dpi=600, bbox_inches='tight')
 ```
 
-```{python}
+![](/Users/robynwright/Documents/OneDrive/Langille_Lab_postdoc/kraken_confidence_testing_mock/analysis/figures/CAMI2/kraken_classified_index_mean_confidence.png)
+
+```{python, eval=FALSE}
 outraw = pd.read_csv(direc+'analysis/CAMI2/summary_outraw_confidence_no_unclassified.csv', index_col=0, header=0)
 avg = 'Mean'
 fig = plt.figure(figsize=(25,15))
@@ -2198,7 +2218,7 @@ plt.savefig(direc+'analysis/figures/CAMI2/kraken_classified_index_'+avg+'_confid
 
 Figure 6:
 Reduced plots:
-```{python}
+```{python, eval=FALSE}
 outraw = pd.read_csv(direc+'analysis/CAMI2/summary_outraw_confidence.csv', index_col=0, header=0)
 avg = 'Mean'
 fig = plt.figure(figsize=(20,10))
@@ -2271,8 +2291,10 @@ plt.subplots_adjust(hspace=0.4)
 plt.savefig(direc+'analysis/figures/CAMI2/kraken_classified_index_'+avg+'_confidence_reduced_plots.png', dpi=600, bbox_inches='tight')
 ```
 
+![](/Users/robynwright/Documents/OneDrive/Langille_Lab_postdoc/kraken_confidence_testing_mock/analysis/figures/CAMI2//kraken_classified_index_mean_confidence_reduced_plots.png)
+
 Reads that are correctly classified as a proportion of reads that are classified:
-```{python}
+```{python, eval=FALSE}
 outraw = pd.read_csv(direc+'analysis/CAMI2/summary_outraw_confidence.csv', index_col=0, header=0)
 avg = 'Mean'
 fig = plt.figure(figsize=(20,10))
@@ -2345,6 +2367,8 @@ plt.subplots_adjust(hspace=0.4)
 plt.savefig(direc+'analysis/figures/CAMI2/kraken_classified_correct_classifications.png', dpi=600, bbox_inches='tight')
 ```
 
+![](/Users/robynwright/Documents/OneDrive/Langille_Lab_postdoc/kraken_confidence_testing_mock/analysis/figures/CAMI2/kraken_classified_correct_classifications.png)
+
 ## E. Index for all databases
 
 Index showing the accuracy and also the average confidence threshold for samples correctly classified at each rank (relative to what they should be correctly).
@@ -2352,7 +2376,7 @@ Index showing the accuracy and also the average confidence threshold for samples
 If kraken has classified a lower level than CAMI2, I'm not penalising this if it would be correct at the level that CAMI2 has. 
 
 Figure S19:
-```{python}
+```{python, eval=FALSE}
 outraw = pd.read_csv(direc+'analysis/CAMI2/summary_outraw.csv', index_col=0, header=0)
 avg = 'Mean'
 fig = plt.figure(figsize=(25,15))
@@ -2402,3 +2426,7 @@ for a in range(len(datasets)):
 
 plt.savefig(direc+'analysis/figures/CAMI2/kraken_classified_index_'+avg+'.png', dpi=600, bbox_inches='tight')
 ```
+
+![](/Users/robynwright/Documents/OneDrive/Langille_Lab_postdoc/kraken_confidence_testing_mock/analysis/figures/CAMI2//kraken_classified_index_mean.png)
+
+

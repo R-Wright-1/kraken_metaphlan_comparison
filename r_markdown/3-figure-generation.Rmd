@@ -637,7 +637,7 @@ plt.savefig(direc_save+'figures/RefSeqV205_confidence_basic_metrics_lines.png', 
 #### Alpha diversity
 
 Figure S4:
-```{python, results='hide', fig.keep='all'}
+```{python, results='hide', fig.keep='all', eval=FALSE}
 db = 'kraken2_refseqV205'
 this_db = pd.read_csv(direc_save+db+'_calculations.csv', header=0, index_col=0)
 fig = plt.figure(figsize=(11,10))
@@ -995,7 +995,7 @@ Figure S6 (Mean F1 score):
 ### Reduced metrics with a confidence threshold of 0.60
 
 Figure S7:
-```{python, results='hide', fig.keep='all'}
+```{python, results='hide', fig.keep='all', eval=FALSE}
 ani = ['ani100', 'ani99', 'ani97', 'ani95']
 species_diversity = ['cLOW', 'cHIGH']
 strain_diversity = ['stFalse', 'stTrue']
@@ -1192,7 +1192,7 @@ plt.savefig(direc_save+'figures/kraken_confidence_vs_minimizer.png', bbox_inches
 # 6. Filtering taxa based on confidence threshold {.tabset}
 
 Figure S10:
-```{python, results='hide', fig.keep='all'}
+```{python, results='hide', fig.keep='all', eval=FALSE}
 db = 'kraken2_refseqV205'
 this_db = pd.read_csv(direc_save+db+'_filtered_calculations.csv', header=0, index_col=0)
 fig = plt.figure(figsize=(20,35))
@@ -1284,7 +1284,7 @@ plt.savefig(direc_save+'figures/RefSeqV205_confidence_filter_all_metrics_lines.p
 # 7. Comparison of all databases {.tabset}
 
 Figure 4:
-```{python, results='hide', fig.keep='all'}
+```{python, results='hide', fig.keep='all', eval=FALSE}
 plt.figure(figsize=(34,20))
 all_dbs = ['kraken2_minikraken', 'kraken2_standard_0521', 'kraken2_chocophlan', 'kraken2_refseqV205_100GB', 'kraken2_refseqV208_nt', 'kraken2_refseqV205_500GB', 'kraken2_GTDBr202RefSeqV205', 'kraken2_refseqV205']
 truth_calcs = pd.read_csv(direc_save+'truth_calculations.csv', index_col=0, header=0)
@@ -1357,7 +1357,7 @@ plt.savefig(direc_save+'figures/Databases_confidence_comparison_reduced_metrics.
 # 8. Comparison of MetaPhlAn 3 options {.tabset}
 
 Figure S11:
-```{python, results='hide', fig.keep='all'}
+```{python, results='hide', fig.keep='all', eval=FALSE}
 plt.figure(figsize=(24,24))
 all_metrics = prec_rec_f1+alpha_div+beta_div
 settings = ['estimated_reads', 'default', 'very_sensitive_local', 'sensitive', 'sensitive_local', 'avg_g', 'avg_l', 'tavg_l', 'wavg_g', 'wavg_l', 'med', 'humann_bowtie2', 'humann_diamond']
@@ -1595,7 +1595,7 @@ plt.savefig(direc_save+'figures/metaphlan_vs_kraken_choco_v205_horizontal_all_me
 # 10. Kraken2 vs MetaPhlAn 3 (normalising for genome size in mock community samples) {.tabset}
 
 Figure S13:
-```{python, results='hide', fig.keep='all'}
+```{python, results='hide', fig.keep='all', eval=FALSE}
 plt.figure(figsize=(20,6))
 meta_props = pd.read_csv(direc_save+'proportions/MetaPhlAn_calculations.csv', index_col=0, header=0)
 refseq_props_ln = pd.read_csv(direc_save+'proportions/kraken2_refseqV205_length_norm_calculations.csv', index_col=0, header=0)
