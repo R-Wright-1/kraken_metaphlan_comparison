@@ -1,0 +1,83 @@
+---
+title: "Kraken2 and MetaPhlAn3 confidence and database testing - compare new database"
+output:
+  html_document:
+    toc: yes
+    toc_float: yes
+    code_folding: hide
+  pdf_document:
+    toc: yes
+---
+
+This file contains instructions on running a comparison of a new database (this can be any Kraken2 database that you like) with the results of the best-performing RefSeq Complete V205 database. 
+
+# Get test samples
+
+These are all on [Dropbox](https://www.dropbox.com/sh/lvlz2wpsssvsrad/AABoCUIJqnmyRyxSyBkouXvPa/datasets/simulated_mock_samples?dl=0&subfolder_nav_tracking=1), and are taken from [Parks et al.](https://www.frontiersin.org/articles/10.3389/fmicb.2021.643682/full). We selected one sample at random from each of their sample types (i.e. combinations of 95-100% average nucleotide identity, low or high species diversity, and strain diversity presence true/false).
+
+```{bash, eval=FALSE}
+mkdir test_samples
+cd test_samples
+wget https://www.dropbox.com/sh/lvlz2wpsssvsrad/AABvggSeIoCuOZKhKVA-1C-1a/datasets/simulated_mock_samples/ani100_cHIGH_stFalse_r0.fastq.gz?dl=1 -O ani100_cHIGH_stFalse_r0.fastq.gz
+wget https://www.dropbox.com/sh/lvlz2wpsssvsrad/AAAlF4IDuh_DGg99Qrspf1Hma/datasets/simulated_mock_samples/ani95_cLOW_stTrue_r1.fastq.gz?dl=1 -O ani95_cLOW_stTrue_r1.fastq.gz
+wget https://www.dropbox.com/sh/lvlz2wpsssvsrad/AADPpsypaYGAymr7XnEGVcmVa/datasets/simulated_mock_samples/ani99_cHIGH_stFalse_r7.fastq.gz?dl=1 -O ani99_cHIGH_stFalse_r7.fastq.gz
+wget https://www.dropbox.com/sh/lvlz2wpsssvsrad/AAB8o5EUa-zwPXoMza3nCtQta/datasets/simulated_mock_samples/ani100_cHIGH_stTrue_r4.fastq.gz?dl=1 -O ani100_cHIGH_stTrue_r4.fastq.gz
+wget https://www.dropbox.com/sh/lvlz2wpsssvsrad/AABLMORfvsFDqJfcDtWJ4DJea/datasets/simulated_mock_samples/ani97_cHIGH_stFalse_r0.fastq.gz?dl=1 -O ani97_cHIGH_stFalse_r0.fastq.gz
+wget https://www.dropbox.com/sh/lvlz2wpsssvsrad/AADNwYH_ZiBTR2T65mykZa6Aa/datasets/simulated_mock_samples/ani99_cHIGH_stTrue_r1.fastq.gz?dl=1 -O ani99_cHIGH_stTrue_r1.fastq.gz
+wget https://www.dropbox.com/sh/lvlz2wpsssvsrad/AADH3i9TZ-HhxNCNeOrRFHB0a/datasets/simulated_mock_samples/ani100_cLOW_stFalse_r2.fastq.gz?dl=1 -O ani100_cLOW_stFalse_r2.fastq.gz
+wget https://www.dropbox.com/sh/lvlz2wpsssvsrad/AACILPTmgvgUdB32O9qpOGhWa/datasets/simulated_mock_samples/ani97_cHIGH_stTrue_r4.fastq.gz?dl=1 -O ani97_cHIGH_stTrue_r4.fastq.gz
+wget https://www.dropbox.com/sh/lvlz2wpsssvsrad/AAAYLUx5CcwtKguI8WS2D-aYa/datasets/simulated_mock_samples/ani99_cLOW_stFalse_r2.fastq.gz?dl=1 -O ani99_cLOW_stFalse_r2.fastq.gz
+wget https://www.dropbox.com/sh/lvlz2wpsssvsrad/AACBK9DjE7Ud5JQxiPaPEjQaa/datasets/simulated_mock_samples/ani100_cLOW_stTrue_r8.fastq.gz?dl=1 -O ani100_cLOW_stTrue_r8.fastq.gz
+wget https://www.dropbox.com/sh/lvlz2wpsssvsrad/AABT46ucHomePQEZP96DV0AAa/datasets/simulated_mock_samples/ani97_cLOW_stFalse_r7.fastq.gz?dl=1 -O ani97_cLOW_stFalse_r7.fastq.gz
+wget https://www.dropbox.com/sh/lvlz2wpsssvsrad/AADEqoos3l85FNS6OYHO_7cma/datasets/simulated_mock_samples/ani99_cLOW_stTrue_r6.fastq.gz?dl=1 -O ani99_cLOW_stTrue_r6.fastq.gz
+wget https://www.dropbox.com/sh/lvlz2wpsssvsrad/AADQE0oUYmOCsZ62T_E5qehca/datasets/simulated_mock_samples/ani95_cLOW_stFalse_r0.fastq.gz?dl=1 -O ani95_cLOW_stFalse_r0.fastq.gz
+wget https://www.dropbox.com/sh/lvlz2wpsssvsrad/AAC4w3sEJb4HnsoSAYISndKSa/datasets/simulated_mock_samples/ani97_cLOW_stTrue_r7.fastq.gz?dl=1 -O ani97_cLOW_stTrue_r7.fastq.gz
+```
+
+# Run the samples against the new database using Kraken2 and then Bracken
+
+Note that I have assumed you have installed these already. As of right now (September 13th 2022), I recommend installing Kraken2 using conda and Bracken from Github as the other versions didn't seem to work well together.
+
+```{bash, eval=FALSE}
+parallel -j 2 'kraken2 --use-names --threads 12 --db {3} --memory-mapping {1} --output kraken_test_results/{1/.}.kraken --report test_results/{1/.}.{2}.kreport --confidence {2}' ::: test_samples/* ::: 0.00 0.05 0.10 0.15 0.20 0.25 0.30 0.35 0.40 0.45 0.50 0.55 0.60 0.65 0.70 0.75 0.80 0.85 0.90 0.95 1.00 ::: databases/kraken2_minikraken2_v2_8GB_201904_UPDATE # note that this is an example command, and you should modify it as necessary. Some of the other scripts assume that you have run this with more than one different confidence threshold, however you don't have to run it with this many different confidence thresholds if you don't want to.
+
+rm kraken_test_results/*.kraken #remove the intermediate large kraken files
+for i in kraken_test_results/* ; do mv $i "${i/.fastq/}" ; done #and rename the files to the expected format, assuming that they were previously gzipped still
+
+parallel -j 10 'bracken -d {2} -i {1} -l S -o {1.}.bracken -r 150' ::: kraken_test_results/* ::: databases/kraken2_minikraken2_v2_8GB_201904_UPDATE #again, this is an example command and you should modify it as necessary
+```
+
+# Get the scripts and files needed for comparisons
+
+These scripts are on GitHub [here](https://github.com/R-Wright-1/kraken_metaphlan_comparison/tree/main/compare_new_database). It is up to you whether you want to clone the whole repository and take the scripts/files or download them separately, but the rest of the instructions here assume that all of the following files are in your working directory:
+- combine_bracken_output.py
+- compare_truth.py
+- kraken2_refseqV205_compare_with_truth.csv
+- make_summary_plot.py
+- truth.csv
+
+# Run the scripts to compare the output
+
+Create an environment that contains the required Python packages:
+```{bash, eval=FALSE}
+conda create -n "compare" python=3.7.0
+conda activate compare
+conda install pandas
+conda install -c anaconda scikit-bio
+conda install -c "conda-forge/label/cf202003" deicode
+conda install -c anaconda scipy
+```
+Note that you can just install these packages into your current environment if you like, but some of them currently require Python version 3.7.0 so I have found it easier to install these in their own environment.
+
+Run the commands and scripts:
+```{bash, eval=FALSE}
+mkdir test_results
+mv kraken_test_results/*.kreport test_results
+conda activate compare
+python combine_bracken_output.py
+python compare_truth.py
+python make_summary_plot.py
+conda deactivate
+```
+
+You should now have a summary plot called Comparison_of_databases.png that shows the performance of the RefSeq Complete V205 database and also the database that you used. 
