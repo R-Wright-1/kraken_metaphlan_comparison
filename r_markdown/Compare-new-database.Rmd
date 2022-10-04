@@ -92,47 +92,14 @@ metaphlan --install --bowtie2db metaphlan4/
 Compare:
 ```{bash, eval=FALSE}
 mkdir metaphlan_out
-parallel -j 1 'metaphlan {1} --input_type fastq -o metaphlan_out/{1/.}.txt --bowtie2db metaphlan4/' ::: fasta_files/*
-for i in metaphlan_out_no_reads/* ; do mv $i "${i/.fastq/}" ; done
-parallel -j 1 'metaphlan {1} --input_type bowtie2out -o metaphlan_out/{1/.}.txt --bowtie2db metaphlan4/ --nproc 12 -t rel_ab_w_read_stats' ::: fasta_files/*.txt
+mkdir metaphlan_out_no_reads
+#parallel -j 1 'metaphlan {1} --input_type fastq -o metaphlan_out_no_reads/{1/.}.txt --bowtie2db metaphlan4/' ::: fasta_files/*
+#for i in metaphlan_out_no_reads/* ; do mv $i "${i/.fastq/}" ; done
+#note that I first ran the above, but had forgotten to add the rel_ab_w_read_stats option, so I reran it as follows:
+#parallel -j 1 'metaphlan {1} --input_type bowtie2out -o metaphlan_out/{1/.}.txt --bowtie2db metaphlan4/ --nproc 12 -t rel_ab_w_read_stats' ::: fasta_files/*.txt
+#but for an actual comparison it should have been run like so:
+parallel -j 1 'metaphlan {1} --input_type fastq -o metaphlan_out/{1/.}.txt --bowtie2db metaphlan4/ --nproc 12 -t rel_ab_w_read_stats' ::: fasta_files/*.txt
 for i in metaphlan_out/* ; do mv $i "${i/.fastq.gz.bowtie2out/}" ; done
-```
-
-Subset MetaPhlAn 3 output:
-```{python}
-import pandas as pd
-
-full_file = pd.read_csv('/Users/robynwright/Dropbox/Langille_Lab_postdoc/Github/kraken_metaphlan_comparison_2/compare_new_database/metaphlan3_compare_with_truth_all.csv', index_col=0, header=0)
-keeping = []
-rename = {}
-for row in full_file.index:
-  if 'MetaPhlAn-estimated_reads' in row and 'ani' in row:
-    keeping.append(row)
-    rename[row] = row.split('-')[0]
-
-red_file = full_file.loc[keeping, :].rename(index=rename)
-
-get_columns = {'Proportion classified':'proportion_classified' ,'Precision taxa':'precision_taxa', 'Recall taxa':'recall_taxa', 'F1 score taxa':'f1_taxa', 'Precision reads':'precision_reads', 'Recall reads':'recall_reads', 'F1 score reads':'f1_reads', 'Number of taxa':'dissimilarity_species', 'Shannon diversity':'shannon_diversity', 'Robust Aitchisons distance':'aitchisons_distance', 'Bray-Curtis dissimilarity raw':'braycurtis_distance', 'L1 distance':'L1_distance'}
-
-keeping = []
-for col in red_file.columns:
-  if col in get_columns:
-    keeping.append(col)
-
-red_file = red_file.loc[:, keeping]
-red_file = red_file.rename(columns=get_columns)
-
-truth = pd.read_csv('/Users/robynwright/Dropbox/Langille_Lab_postdoc/Github/kraken_metaphlan_comparison_2/compare_new_database/truth.csv', index_col=0, header=0)
-truth[truth > 1] = 1
-truth = truth.sum(axis=0)
-
-for row in red_file.index:
-  num = red_file.loc[row, 'dissimilarity_species']
-  truth_num = truth.loc[row]
-  diff = num-truth_num
-  red_file.loc[row, 'dissimilarity_species'] = diff
-
-red_file.to_csv('/Users/robynwright/Dropbox/Langille_Lab_postdoc/Github/kraken_metaphlan_comparison_2/compare_new_database/metaphlan3_compare_with_truth.csv')
 ```
 
 Run the commands and scripts:
@@ -140,6 +107,18 @@ Run the commands and scripts:
 conda activate compare
 python combine_metaphlan4_output.py
 python compare_truth.py
-python make_summary_plot_metaphlan.py
+python make_summary_plot.py
+conda deactivate
+```
+
+You should now have a summary plot called Comparison_of_databases.png that shows the performance of the RefSeq Complete V205 database, the original MetaPhlAn 3 run with estimated number of reads, and MetaPhlAn 4 with estimated number of reads. 
+
+# Compare with a different tool
+
+If you have the output from using a different tool, as long as it is in the expected format with NCBI species taxonomy ID's as rows and the sample names as columns then you should be able to run this like so:
+```{bash, eval=FALSE}
+conda activate compare
+python compare_truth.py
+python make_summary_plot.py
 conda deactivate
 ```
