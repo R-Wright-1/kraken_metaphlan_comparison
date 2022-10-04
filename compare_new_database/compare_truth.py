@@ -4,14 +4,20 @@ import numpy as np
 from skbio.diversity import alpha_diversity, beta_diversity
 from deicode.preprocessing import rclr
 from scipy.spatial import distance
+import argparse
+
+parser = argparse.ArgumentParser(description='This is a script to compare the results of a new database or method with those obtained with Kraken2 + RefSeq Complete V205 and MetaPhlAn 3')
+parser.add_argument('--file', dest='res_file', default='bracken_out.csv',
+                    help='takes bracken_out.csv as default, but this should be the name of the file containing the results you wish to repair.')
+args = parser.parse_args()
 
 truth = pd.read_csv('truth.csv', index_col=0, header=0)
-# results = pd.read_csv('subset_kraken2_refseqV205_combined.csv', index_col=0, header=0)
-results = pd.read_csv('bracken_out.csv', index_col=0, header=0)
+results = pd.read_csv(args.res_file, index_col=0, header=0)
 col_rename = {}
 for col in results.columns:
-  if len(col.split('.',1)[1]) == 4:
-    col_rename[col] = col.split('.',1)[0]+'-'+col.split('.',1)[1]
+  if '.' in col:
+    if len(col.split('.',1)[1]) == 4:
+      col_rename[col] = col.split('.',1)[0]+'-'+col.split('.',1)[1]
 
 results = results.rename(columns=col_rename)
 
@@ -25,6 +31,7 @@ metrics = ['sample', 'proportion_classified', 'precision_taxa', 'recall_taxa', '
 def prec_rec_f1(sample_df):
   y_true, y_pred = sample_df.iloc[:, 0].values, sample_df.iloc[:, 1].values
   correct_reads, correct_taxa = 0, 0
+  if sum(y_true) == 0: return 0, 0, 0, 0, 0, 0
   for v in range(len(y_true)):
     if y_true[v] > 0 and y_pred[v] > 0:
       if y_pred[v] >= y_true[v]: correct_reads += y_true[v]
@@ -44,12 +51,15 @@ metric_results = []
 for col in results.columns:
   #if 'ani95_cLOW_stFalse_r0' not in col: continue
   this_sample = [col]
-  ts = col.split('-')[0]
+  if '-' in col:
+    ts = col.split('-')[0]
+  else:
+    ts = col
   sam_df = results.copy(deep=True).loc[:, [col]]
   tru_df = truth.copy(deep=True).loc[:, [ts]]
   sam_df = sam_df[sam_df.max(axis=1) > 0]
   tru_df = tru_df[tru_df.max(axis=1) > 0]
-  comb_df = pd.concat([sam_df, tru_df]).fillna(value=0)
+  comb_df = pd.concat([sam_df, tru_df.rename(columns={ts:ts+'-truth'})]).fillna(value=0)
   comb_df = comb_df.groupby(by=comb_df.index, axis=0).sum()
   #proportion classified
   this_sample.append(sam_df.sum(axis=0).values[0]/tru_df.sum(axis=0).values[0])
