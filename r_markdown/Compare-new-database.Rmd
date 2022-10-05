@@ -11,6 +11,9 @@ output:
 
 This file contains instructions on running a comparison of a new database (this can be any Kraken2 database that you like) with the results of the best-performing RefSeq Complete V205 database. 
 
+**Please note that if you are trying to compare with the results that we obtained in the manuscript, you will get different results if using a different Kraken2 version. We have asked about the reason for this on the [Kraken2 Github page](https://github.com/DerrickWood/kraken2/issues/594), but have not yet received a reply.** 
+This seems to happen even when comparing between e.g. different conda files that contain the same Kraken2 version. It's therefore possible that you will see slightly different results even if you use the same version of Kraken2 that I did, and until the authors respond I don't have a good explanation for what the reason for this might be. I can only say that it still seems to do a reasonable job, even if the results do differ a bit between different versions.
+
 # Get test samples
 
 These are all on [Dropbox](https://www.dropbox.com/sh/lvlz2wpsssvsrad/AABoCUIJqnmyRyxSyBkouXvPa/datasets/simulated_mock_samples?dl=0&subfolder_nav_tracking=1), and are taken from [Parks et al.](https://www.frontiersin.org/articles/10.3389/fmicb.2021.643682/full). We selected one sample at random from each of their sample types (i.e. combinations of 95-100% average nucleotide identity, low or high species diversity, and strain diversity presence true/false).
