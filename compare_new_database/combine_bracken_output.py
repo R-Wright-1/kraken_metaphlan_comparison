@@ -7,6 +7,7 @@ results = os.listdir(results_dir)
 
 all_names = [f.replace('.kreport', '').replace('.bracken', '').replace('_bracken_species', '') for f in results]
 all_names = list(set(all_names))
+all_names = [n for n in all_names if '.kraken' not in n and '_bracken' not in n]
 results = [f for f in results if '.bracken' in f]
 
 for fn in results:
