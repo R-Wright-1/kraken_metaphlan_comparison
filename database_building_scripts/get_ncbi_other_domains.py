@@ -53,7 +53,7 @@ for domain in domains:
             os.system("mv assembly_summary.txt "+str(domain)+"_assembly_summary.txt")
         else:
             print("Already got "+str(domain)+"_assembly_summary.txt")
-        summary = pd.read_csv(str(domain)+"_assembly_summary.txt", sep='\t', header=1, index_col=0)
+        summary = pd.read_csv(str(domain)+"_assembly_summary.txt", sep='\t', header=1, index_col=0, on_bad_lines='skip')
         summary = summary.loc[:, ['taxid', 'species_taxid', 'organism_name', 'assembly_level', 'ftp_path']]
         summary['Domain'] = str(domain)
         assembly_summaries.append(summary)
